@@ -10,7 +10,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="头文件">
-      <UniqueIdentifier>{6dc736a0-ed09-49d9-90cc-694f28887cc4}</UniqueIdentifier>
+      <UniqueIdentifier>{1a98b3dc-48ed-4307-a0a4-a81be0c31421}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,6 +19,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CELLTimestamp.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="EasyTcpClient.hpp">
       <Filter>头文件</Filter>
     </ClInclude>

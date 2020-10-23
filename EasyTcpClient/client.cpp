@@ -3,7 +3,9 @@
 // ./client
 
 #include "EasyTcpClient.hpp"
+#include "CELLTimestamp.hpp"
 #include <thread>
+#include <atomic>
 
 bool g_bRun = true;
 void cmdThread()
@@ -25,49 +27,96 @@ void cmdThread()
     }
 }
 
-int main()
+//客户端数量
+const int cCount = 1000; //最大连接数-服务端个数FD_SETSIZE - 1
+//发送线程数量
+const int tCount = 4;
+EasyTcpClient* client[cCount];
+std::atomic_int sendCount = 0;
+std::atomic_int readyCount = 0;
+
+void sendThread(int id)
 {
-    const int cCount = 100; //最大连接数-服务端个数FD_SETSIZE - 1
-    EasyTcpClient* client[cCount];
-    for (int n = 0; n < cCount; n++)
+    printf("thread<%d>, start\n", id);
+    //4个线程 ID 1-4
+    int c = cCount / tCount;
+    int begin = (id - 1) * c;
+    int end = id * c;
+
+    for (int n = begin; n < end; n++)
     {
-        if (!g_bRun)
-        {
-            return 0;
-        }
         client[n] = new EasyTcpClient();
     }
-    for (int n = 0; n < cCount; n++)
+    for (int n = begin; n < end; n++)
     {
-        if (!g_bRun)
-        {
-            return 0;
-        }
         client[n]->InitSocket();
         client[n]->Connect("127.0.0.1", 4567);
-        printf("Connect=%d\n", n);
     }
- 
-    //启动线程
-    std::thread t1(cmdThread);
-    t1.detach();
 
-    Login login;
-    strcpy(login.userName, "tao");
-    strcpy(login.PassWord, "mm");
+    printf("thread<%d>, Connect=<begin=%d, end=%d>\n", id, begin, end - 1);
+
+    readyCount++;
+    while(readyCount < tCount)
+    {
+        //等待其他线程准备好发送数据
+        std::chrono::milliseconds t(10);
+        std::this_thread::sleep_for(t);
+    }
+
+    Login login[1];
+    for (int n = 0; n < 1; n++)
+    {
+        strcpy(login[n].userName, "tao");
+        strcpy(login[n].PassWord, "mm");
+    }
+
     while (g_bRun)
     {
-        for (int n = 0; n < cCount; n++)
+        for (int n = begin; n < end; n++)
         {
-            client[n]->SendData(&login);
-            client[n]->OnRun();
+            if (SOCKET_ERROR != client[n]->SendData(login))
+            {
+                sendCount++;
+            }
+            //client[n]->OnRun();
         }
         //printf("空闲时间处理其他业务...\n");
     }
 
-    for (int n = 0; n < cCount; n++)
+    for (int n = begin; n < end; n++)
     {
         client[n]->Close();
+        delete client[n];
+    }
+
+    printf("thread<%d>, exit\n", id);
+}
+
+int main()
+{
+    //启动UI线程
+    std::thread t1(cmdThread);
+    t1.detach();
+
+    //启动发送线程
+    for (int n = 0; n < tCount; n++)
+    {
+        std::thread t1(sendThread, n + 1);
+        t1.detach();
+    }
+
+    CELLTimestamp tTime;
+
+    while (g_bRun)
+    {
+        auto t = tTime.getElapseSecond();
+        if (t >= 1.0)
+        {
+            printf("thread<%d>, clients<%d>, time<%lf>, send<%d>\n", tCount, cCount, t, (int)(sendCount / t));
+            sendCount = 0;
+            tTime.update();
+        }
+        Sleep(1);
     }
 
     printf("客户端已退出\n");

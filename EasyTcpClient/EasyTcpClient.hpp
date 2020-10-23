@@ -27,11 +27,13 @@ class EasyTcpClient
 {
 private:
     SOCKET _sock;
+    bool _isConnect;
 
 public:
     EasyTcpClient()
     {
         _sock = INVALID_SOCKET;
+        _isConnect = false;
     }
 
     virtual ~EasyTcpClient()
@@ -87,13 +89,28 @@ public:
         }
         else
         {
+            _isConnect = true;
             //printf("<socket=%d>连接服务器<%s, %d>成功...\n", (int)_sock, ip, port);
         }
         return ret;
     }
 
+    //发送数据
+    int SendData(DataHeader* header)
+    {
+        int ret = SOCKET_ERROR;
+        if (isRun() && header)
+        {
+            ret = (int)send(_sock, (const char*)header, header->dataLength, 0);
+            if (SOCKET_ERROR == ret)
+            {
+                Close();
+            }
+        }
+        return ret;
+    }
+
     //处理网络消息
-    int _nCount = 0;
     bool OnRun()
     {
         if (isRun())
@@ -103,8 +120,7 @@ public:
             FD_SET(_sock, &fdReads);
             timeval t = { 0,0 }; //s,ms
             int ret = select((int)_sock + 1, &fdReads, 0, 0, &t);
-            //printf("select ret=%d count=%d\n", ret, _nCount++);
-            if (ret < 0)
+            if (ret < 0) //select错误
             {
                 printf("<socket=%d>select任务结束1\n", (int)_sock);
                 Close();
@@ -113,7 +129,7 @@ public:
             if (FD_ISSET(_sock, &fdReads))
             {
                 FD_CLR(_sock, &fdReads);
-                if (-1 == RecvData(_sock))
+                if (-1 == RecvData(_sock)) //与服务器断开连接
                 {
                     printf("<socket=%d>select任务结束2\n", (int)_sock);
                     Close();
@@ -130,9 +146,9 @@ public:
 #define RECV_BUFF_SIZE 10240
 #endif
     //接收缓冲区
-    char _szRecv[RECV_BUFF_SIZE] = {};
+    //char _szRecv[RECV_BUFF_SIZE] = {};
     //第二缓冲区 消息缓冲区
-    char _szMsgBuf[RECV_BUFF_SIZE * 10] = {};
+    char _szMsgBuf[RECV_BUFF_SIZE * 5] = {};
     //消息缓冲区的数据尾部位置
     int _lastPos = 0;
 
@@ -140,7 +156,8 @@ public:
     int RecvData(SOCKET cSock)
     {
         //接收服务端数据
-        int nlen = (int)recv(cSock, _szRecv, RECV_BUFF_SIZE, 0); //sizeof(DataHeader)
+        char* szRecv = _szMsgBuf + _lastPos;
+        int nlen = (int)recv(cSock, szRecv, RECV_BUFF_SIZE * 5 - _lastPos, 0); //返回其实际copy的字节数
         //printf("nlen=%d\n", nlen);
         if (nlen <= 0)
         {
@@ -148,7 +165,7 @@ public:
             return -1;
         }
         //将收取收取到的数据拷贝到消息缓冲区
-        memcpy(_szMsgBuf + _lastPos, _szRecv, nlen);
+        //memcpy(_szMsgBuf + _lastPos, _szRecv, nlen);
         //消息缓冲区的数据尾部位置后移
         _lastPos += nlen;
         //判断消息缓冲区的数据长度大于消息头DataHeader长度
@@ -183,19 +200,19 @@ public:
         {
             case CMD_LOGIN_RESULT:
             {
-                LoginResult* login = (LoginResult*)header;
+                //LoginResult* login = (LoginResult*)header;
                 //printf("<socket=%d>收到服务器消息请求：CMD_LOGIN_RESULT  数据长度：%d\n", (int)_sock, login->dataLength);
             }
             break;
             case CMD_LOGOUT_RESULT:
             {
-                LogoutResult* logout = (LogoutResult*)header;
+                //LogoutResult* logout = (LogoutResult*)header;
                 //printf("<socket=%d>收到服务器消息请求：CMD_LOGOUT_RESULT  数据长度：%d\n", (int)_sock, logout->dataLength);
             }
             break;
             case CMD_NEW_USER_JOIN:
             {
-                NewUserJoin* userJoin = (NewUserJoin*)header;
+                //NewUserJoin* userJoin = (NewUserJoin*)header;
                 //printf("<socket=%d>收到服务器消息请求：CMD_NEW_USER_JOIN  数据长度：%d\n", (int)_sock, userJoin->dataLength);
             }
             break;
@@ -209,16 +226,6 @@ public:
                 printf("<socket=%d>收到未定义消息  数据长度：%d\n", (int)_sock, header->dataLength);
             }
         }
-    }
-
-    //发送数据
-    int SendData(DataHeader* header)
-    {
-        if (isRun() && header)
-        {
-            return (int)send(_sock, (const char*)header, header->dataLength, 0);
-        }
-        return SOCKET_ERROR;
     }
 
     //关闭Socket
@@ -235,12 +242,13 @@ public:
 #endif
             _sock = INVALID_SOCKET;
         }
+        _isConnect = false;
     }
 
     //是否工作中
     bool isRun()
     {
-        return INVALID_SOCKET != _sock;
+        return INVALID_SOCKET != _sock && _isConnect;
     }
 };
 

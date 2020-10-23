@@ -10,7 +10,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="头文件">
-      <UniqueIdentifier>{ef921c09-1985-4b5d-b2b7-914305f2807d}</UniqueIdentifier>
+      <UniqueIdentifier>{1be92a16-554d-4c24-a23d-5bd51539caad}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,6 +19,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CELLTask.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="CELLTimestamp.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
