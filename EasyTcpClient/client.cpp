@@ -1,14 +1,26 @@
-﻿#define WIN32_LEAN_AND_MEAN //防止windows.h和WinSock2.h宏重定义
-#define _WINSOCK_DEPRECATED_NO_WARNINGS //inet_ntoa函数，过时函数重新启用
-//或者 项目-》属性-》C/C++ -》常规-》SDL检查 设置为否（配置：所有配置、平台：所有平台）
-#define _CRT_SECURE_NO_WARNINGS //scanf函数和strcpy函数
+﻿#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN //防止windows.h和WinSock2.h宏重定义
+    #define _WINSOCK_DEPRECATED_NO_WARNINGS //inet_ntoa函数，过时函数重新启用
+    #define _CRT_SECURE_NO_WARNINGS //scanf函数和strcpy函数
+    #include <windows.h>
+    #include <WinSock2.h>
+    //静态链接库，解析WSAStartup和WSACleanup
+    #pragma comment(lib,"ws2_32.lib")
+#else
+    // linux环境编译命令
+    // g++ client.cpp -std=c++11 -pthread -o client
+    // ./client
+    #include <unistd.h> //unix std，类似windows.h
+    #include <arpa/inet.h> //类似WinSock2.h
+    #include <string.h>
 
-#include <windows.h>
-#include <WinSock2.h>
+    #define SOCKET int
+    #define INVALID_SOCKET  (SOCKET)(~0)
+    #define SOCKET_ERROR            (-1)
+#endif
+
 #include <stdio.h>
 #include <thread>
-
-#pragma comment(lib,"ws2_32.lib")
 
 enum CMD
 {
@@ -88,8 +100,8 @@ int processor(SOCKET _cSock)
 {
     //缓冲区
     char szRecv[4096] = {};
-    // 5 接收服务端数据
-    int nlen = recv(_cSock, szRecv, sizeof(DataHeader), 0);
+    //接收服务端数据
+    int nlen = (int)recv(_cSock, szRecv, sizeof(DataHeader), 0);
     DataHeader* header = (DataHeader*)szRecv;
     if (nlen <= 0)
     {
@@ -130,7 +142,8 @@ int processor(SOCKET _cSock)
     }
     return 0;
 }
-bool g_bRun = true;
+
+bool g_bRun = true; //子线程结束后，让主线程结束
 void cmdThread(SOCKET _sock)
 {
     while (true)
@@ -149,20 +162,12 @@ void cmdThread(SOCKET _sock)
             strcpy(login.userName, "tao");
             strcpy(login.PassWord, "mm");
             send(_sock, (const char*)&login, sizeof(Login), 0);
-
-            LoginResult loginRet = {};
-            recv(_sock, (char*)&loginRet, sizeof(LoginResult), 0);
-            printf("LoginResult: %d\n", loginRet.result);
         }
         else if (0 == strcmp(cmdBuf, "logout"))
         {
             Logout logout;
             strcpy(logout.userName, "tao");
             send(_sock, (const char*)&logout, sizeof(Logout), 0);
-
-            LogoutResult logoutRet = {};
-            recv(_sock, (char*)&logoutRet, sizeof(LogoutResult), 0);
-            printf("LogoutResult: %d\n", logoutRet.result);
         }
         else
         {
@@ -173,13 +178,14 @@ void cmdThread(SOCKET _sock)
 
 int main()
 {
+#ifdef _WIN32
     //启动Windows socket 2.x环境
     WORD ver = MAKEWORD(2, 2);
     WSADATA dat;
     WSAStartup(ver, &dat);
-    //------------
-    //-- 用Socket API建立简易TCP客户端
-    // 1 建立一个socket
+#endif
+
+    //建立一个socket
     SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
     if (INVALID_SOCKET == _sock)
     {
@@ -189,11 +195,19 @@ int main()
     {
         printf("建立Socket成功...\n");
     }
-    // 2 连接服务器 connect
+
+    //连接服务器 connect
     sockaddr_in _sin = {};
     _sin.sin_family = AF_INET;
     _sin.sin_port = htons(4567); //host to net unsigned short
-    _sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+    //windows IP    192.168.128.1
+    //linux IP      192.168.128.128
+    //macOS IP      192.168.128.129
+#ifdef _WIN32
+    _sin.sin_addr.S_un.S_addr = inet_addr("192.168.128.1");
+#else
+    _sin.sin_addr.s_addr = inet_addr("192.168.128.1");
+#endif
     int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
     if (SOCKET_ERROR == ret)
     {
@@ -214,7 +228,7 @@ int main()
         FD_ZERO(&fdReads);
         FD_SET(_sock, &fdReads);
         timeval t = { 1,0 }; //s,ms
-        int ret = select((int)_sock, &fdReads, 0, 0, &t);
+        int ret = select((int)_sock + 1, &fdReads, 0, 0, &t);
         if (ret < 0)
         {
             printf("select任务结束1\n");
@@ -223,7 +237,6 @@ int main()
         if (FD_ISSET(_sock, &fdReads))
         {
             FD_CLR(_sock, &fdReads);
-
             if (-1 == processor(_sock))
             {
                 printf("select任务结束2\n");
@@ -232,11 +245,15 @@ int main()
         }
         //printf("空闲时间处理其他业务...\n");
     }
-    // 7 关闭套接字closesocket
+
+#ifdef _WIN32
+    //关闭套接字closesocket
     closesocket(_sock);
-    //------------
     //清除Windows socket环境
     WSACleanup();
+#else
+    close(_sock);
+#endif
     printf("客户端已退出\n");
     getchar();
     getchar();
