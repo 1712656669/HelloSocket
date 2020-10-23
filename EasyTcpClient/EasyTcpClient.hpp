@@ -23,17 +23,28 @@
 #include <stdio.h>
 #include "MessageHeader.hpp"
 
+//缓冲区最小单元大小
+#ifndef RECV_BUFF_SIZE
+    #define RECV_BUFF_SIZE 10240
+#endif
+
 class EasyTcpClient
 {
 private:
     SOCKET _sock;
     bool _isConnect;
+    //第二缓冲区 消息缓冲区
+    char _szMsgBuf[RECV_BUFF_SIZE];
+    //消息缓冲区的数据尾部位置
+    int _lastPos;
 
 public:
     EasyTcpClient()
     {
         _sock = INVALID_SOCKET;
         _isConnect = false;
+        memset(_szMsgBuf, 0, sizeof(_szMsgBuf));
+        _lastPos = 0;
     }
 
     virtual ~EasyTcpClient()
@@ -141,23 +152,12 @@ public:
         return false;
     }
 
-    //缓冲区最小单元大小
-#ifndef RECV_BUFF_SIZE
-#define RECV_BUFF_SIZE 10240
-#endif
-    //接收缓冲区
-    //char _szRecv[RECV_BUFF_SIZE] = {};
-    //第二缓冲区 消息缓冲区
-    char _szMsgBuf[RECV_BUFF_SIZE * 5] = {};
-    //消息缓冲区的数据尾部位置
-    int _lastPos = 0;
-
     //接收数据 处理粘包 拆分包
     int RecvData(SOCKET cSock)
     {
         //接收服务端数据
         char* szRecv = _szMsgBuf + _lastPos;
-        int nlen = (int)recv(cSock, szRecv, RECV_BUFF_SIZE * 5 - _lastPos, 0); //返回其实际copy的字节数
+        int nlen = (int)recv(cSock, szRecv, RECV_BUFF_SIZE - _lastPos, 0); //返回其实际copy的字节数
         //printf("nlen=%d\n", nlen);
         if (nlen <= 0)
         {
@@ -200,8 +200,8 @@ public:
         {
             case CMD_LOGIN_RESULT:
             {
-                //LoginResult* login = (LoginResult*)header;
-                //printf("<socket=%d>收到服务器消息请求：CMD_LOGIN_RESULT  数据长度：%d\n", (int)_sock, login->dataLength);
+                //LoginResult* Login = (LoginResult*)header;
+                //printf("<socket=%d>收到服务器消息请求：CMD_LOGIN_RESULT  数据长度：%d\n", (int)_sock, Login->dataLength);
             }
             break;
             case CMD_LOGOUT_RESULT:
@@ -212,7 +212,7 @@ public:
             break;
             case CMD_NEW_USER_JOIN:
             {
-                //NewUserJoin* userJoin = (NewUserJoin*)header;
+                //netmsg_NewUserJoin* userJoin = (netmsg_NewUserJoin*)header;
                 //printf("<socket=%d>收到服务器消息请求：CMD_NEW_USER_JOIN  数据长度：%d\n", (int)_sock, userJoin->dataLength);
             }
             break;

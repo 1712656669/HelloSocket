@@ -6,10 +6,14 @@
 #include <mutex>
 
 #ifdef _DEBUG
-	#include <stdio.h>
-	#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
+	#ifndef xPrintf
+		#include <stdio.h>
+		#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
+	#endif
 #else
-	#define xPrintf(...)  //被替换为空
+	#ifndef xPrintf
+		#define xPrintf(...)  //被替换为空
+	#endif
 #endif
 
 #define MAX_MEMORY_SIZE 1024
@@ -60,13 +64,55 @@ public:
 		}
 	}
 
+
+	//初始化
+	void InitMemory()
+	{
+		xPrintf("InitMemory: nSize=%zd, nBlocks=%zd\n", _nSize, _nBlocks);
+		//断言
+		assert(nullptr == _pBuf);
+		if (_pBuf)
+		{
+			return;
+		}
+		//计算内存池的大小
+		size_t realSize = _nSize + sizeof(MemoryBlock);
+		size_t bufSize = realSize * _nBlocks;
+		//向系统申请池的内存
+		_pBuf = (char*)malloc(bufSize);
+
+		//初始化内存池
+		_pHeader = (MemoryBlock*)_pBuf;
+		_pHeader->pAlloc = this;
+		_pHeader->pNext = nullptr;
+		_pHeader->nID = 0;
+		_pHeader->nRef = 0;
+		_pHeader->bPool = true;
+
+		//遍历内存块初始化
+		MemoryBlock* pTemp1 = _pHeader;
+
+		for (int n = 1; n < (int)_nBlocks; n++)
+		{
+			MemoryBlock* pTemp2 = (MemoryBlock*)(_pBuf + n * realSize);
+			pTemp2->pAlloc = this;
+			pTemp2->pNext = nullptr;
+			pTemp2->nID = n;
+			pTemp2->nRef = 0;
+			pTemp2->bPool = true;
+
+			pTemp1->pNext = pTemp2;
+			pTemp1 = pTemp2;
+		}
+	}
+
 	//申请内存
 	void* allocMemory(size_t nSize)
 	{
 		std::lock_guard<std::mutex> lg(_mutex);
 		if (!_pBuf)
 		{
-			init_szAllocMemory();
+			InitMemory();
 		}
 		MemoryBlock* pReturn = nullptr;
 		if (nullptr == _pHeader) //内存不足
@@ -86,7 +132,7 @@ public:
 			pReturn->nRef = 1;
 		}
 		xPrintf("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
-		return ((char*)pReturn + sizeof(MemoryBlock));
+		return (char*)pReturn + sizeof(MemoryBlock);
 	}
 
 	//释放内存
@@ -110,47 +156,6 @@ public:
 			{
 				free(pBlock);
 			}
-		}
-	}
-
-	//初始化
-	void init_szAllocMemory()
-	{
-		xPrintf("initMemory: nSize=%zd, nBlocks=%zd\n", _nSize, _nBlocks);
-		//断言
-		assert(nullptr == _pBuf);
-		if (_pBuf)
-		{
-			return;
-		}
-		//计算内存池的大小
-		size_t realSize = _nSize + sizeof(MemoryBlock);
-		size_t bufSize = realSize * _nBlocks;
-		//向系统申请池的内存
-		_pBuf = (char*)malloc(bufSize);
-
-		//初始化内存池
-		_pHeader = (MemoryBlock*)_pBuf;
-		_pHeader->pAlloc = this;
-		_pHeader->pNext = nullptr;
-		_pHeader->nID = 0;
-		_pHeader->nRef = 0;
-		_pHeader->bPool = true;
-
-		//遍历内存块初始化
-		MemoryBlock* pTemp1 = _pHeader;
-		
-		for (int n = 1; n < (int)_nBlocks; n++)
-		{
-			MemoryBlock* pTemp2 = (MemoryBlock*)(_pBuf + n * realSize);
-			pTemp2->pAlloc = this;
-			pTemp2->pNext = nullptr;
-			pTemp2->nID = n;
-			pTemp2->nRef = 0;
-			pTemp2->bPool = true;
-
-			pTemp1->pNext = pTemp2;
-			pTemp1 = pTemp2;
 		}
 	}
 
@@ -227,7 +232,7 @@ public:
 			pReturn->nRef = 1;
 			pReturn->bPool = false;
 			xPrintf("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
-			return ((char*)pReturn + sizeof(MemoryBlock));
+			return (char*)pReturn + sizeof(MemoryBlock);
 		}
 	}
 
@@ -267,11 +272,11 @@ private:
 	}
 
 private:
-	MemoryAlloctor<64, 10000> _mem64;
-	MemoryAlloctor<128, 10000> _mem128;
-	MemoryAlloctor<256, 10000> _mem256;
-	MemoryAlloctor<512, 10000> _mem512;
-	MemoryAlloctor<1024, 10000> _mem1024;
+	MemoryAlloctor<64, 100000> _mem64;
+	MemoryAlloctor<128, 100000> _mem128;
+	MemoryAlloctor<256, 100000> _mem256;
+	MemoryAlloctor<512, 100000> _mem512;
+	MemoryAlloctor<1024, 100000> _mem1024;
 	MemoryAlloc* _szAlloc[MAX_MEMORY_SIZE + 1];
 };
 

@@ -28,12 +28,24 @@ void cmdThread()
 }
 
 //客户端数量
-const int cCount = 1000; //最大连接数-服务端个数FD_SETSIZE - 1
+const int cCount = 100; //最大连接数 - 服务端个数 FD_SETSIZE - 1
 //发送线程数量
 const int tCount = 4;
 EasyTcpClient* client[cCount];
-std::atomic_int sendCount = 0;
-std::atomic_int readyCount = 0;
+std::atomic_int sendCount;
+std::atomic_int readyCount;
+
+void recvThread(int begin, int end)
+{
+    while (g_bRun)
+    {
+        for (int n = begin; n < end; n++)
+        {
+            client[n]->OnRun();
+        }
+        //printf("空闲时间处理其他业务...\n");
+    }
+}
 
 void sendThread(int id)
 {
@@ -63,6 +75,9 @@ void sendThread(int id)
         std::this_thread::sleep_for(t);
     }
 
+    std::thread t1(recvThread, begin, end);
+    t1.detach();
+
     Login login[1];
     for (int n = 0; n < 1; n++)
     {
@@ -79,6 +94,8 @@ void sendThread(int id)
                 sendCount++;
             }
             //client[n]->OnRun();
+            //std::chrono::milliseconds t(10);
+            //std::this_thread::sleep_for(t);
         }
         //printf("空闲时间处理其他业务...\n");
     }
@@ -116,7 +133,6 @@ int main()
             sendCount = 0;
             tTime.update();
         }
-        Sleep(1);
     }
 
     printf("客户端已退出\n");

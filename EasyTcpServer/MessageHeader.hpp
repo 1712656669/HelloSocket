@@ -73,11 +73,11 @@ struct LogoutResult :public DataHeader
     int result;
 };
 
-struct NewUserJoin :public DataHeader
+struct netmsg_NewUserJoin :public DataHeader
 {
-    NewUserJoin()
+    netmsg_NewUserJoin()
     {
-        dataLength = sizeof(NewUserJoin);
+        dataLength = sizeof(netmsg_NewUserJoin);
         cmd = CMD_NEW_USER_JOIN;
         sock = 0;
     }

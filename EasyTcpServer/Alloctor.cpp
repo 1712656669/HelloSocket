@@ -1,4 +1,4 @@
-#include "Alloctor.h"
+#include "Alloctor.hpp"
 #include "MemoryMgr.hpp"
 
 void* operator new(size_t nSize)
@@ -19,14 +19,4 @@ void* operator new[](size_t nSize)
 void operator delete[](void* p)
 {
 	MemoryMgr::Instance().freeMem(p);
-}
-
-void* mem_alloc(size_t nSize)
-{
-	return malloc(nSize);
-}
-
-void mem_free(void* p)
-{
-	free(p);
 }

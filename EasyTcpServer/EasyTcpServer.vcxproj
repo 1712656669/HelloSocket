@@ -18,6 +18,23 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Alloctor.cpp" />
+    <ClCompile Include="server.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Alloctor.hpp" />
+    <ClInclude Include="CELL.hpp" />
+    <ClInclude Include="CELLClient.hpp" />
+    <ClInclude Include="CELLObjectPool.hpp" />
+    <ClInclude Include="CELLServer.hpp" />
+    <ClInclude Include="CELLTask.hpp" />
+    <ClInclude Include="CELLTimestamp.hpp" />
+    <ClInclude Include="EasyTcpServer.hpp" />
+    <ClInclude Include="INetEvent.hpp" />
+    <ClInclude Include="MemoryMgr.hpp" />
+    <ClInclude Include="MessageHeader.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -150,18 +167,6 @@
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Alloctor.cpp" />
-    <ClCompile Include="CELLTask.hpp" />
-    <ClCompile Include="server.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Alloctor.h" />
-    <ClInclude Include="CELLTimestamp.hpp" />
-    <ClInclude Include="EasyTcpServer.hpp" />
-    <ClInclude Include="MemoryMgr.hpp" />
-    <ClInclude Include="MessageHeader.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

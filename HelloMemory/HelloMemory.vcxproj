@@ -151,7 +151,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Alloctor.h" />
+    <ClInclude Include="Alloctor.hpp" />
+    <ClInclude Include="CELLObjectPool.hpp" />
     <ClInclude Include="CELLTimestamp.hpp" />
     <ClInclude Include="MemoryMgr.hpp" />
   </ItemGroup>
