@@ -11,6 +11,59 @@
 //以上方法在其他平台不支持，可采用以下统一方法
 //项目-》属性-》链接器-》输入-》附加依赖项 中添加ws2_32.lib（配置：所有配置、平台：所有平台）
 
+enum CMD
+{
+    CMD_LOGIN,
+    CMD_LOGIN_RESULT,
+    CMD_LOGOUT,
+    CMD_LOGOUT_RESULT,
+    CMD_ERROR
+};
+struct DataHeader
+{
+    short dataLength; //数据长度
+    short cmd; //命令
+};
+//DataPackage
+struct Login :public DataHeader
+{
+    Login()
+    {
+        dataLength = sizeof(Login);
+        cmd = CMD_LOGIN;
+    }
+    char userName[32];
+    char PassWord[32];
+};
+struct LoginResult :public DataHeader
+{
+    LoginResult()
+    {
+        dataLength = sizeof(LoginResult);
+        cmd = CMD_LOGIN_RESULT;
+        result = 0;
+    }
+    int result;
+};
+struct Logout :public DataHeader
+{
+    Logout()
+    {
+        dataLength = sizeof(Logout);
+        cmd = CMD_LOGOUT;
+    }
+    char userName[32];
+};
+struct LogoutResult :public DataHeader
+{
+    LogoutResult()
+    {
+        dataLength = sizeof(LogoutResult);
+        cmd = CMD_LOGOUT_RESULT;
+        result = 0;
+    }
+    int result;
+};
 
 int main()
 {
@@ -69,30 +122,41 @@ int main()
     char _recvBuf[128] = {};
     while (true)
     {
+        DataHeader header = {};
         // 5 接收服务端数据
-        int nlen = recv(_cSock, _recvBuf, 128, 0);
+        int nlen = recv(_cSock, (char*)&header, sizeof(DataHeader), 0);
         if (nlen <= 0)
         {
             printf("客户端已退出，任务结束。\n");
             break;
         }
-        printf("收到命令：%s\n", _recvBuf);
-        // 6 处理请求
-        if (0 == strcmp(_recvBuf, "getName"))
+        switch (header.cmd)
         {
-            char msgBuf[] = "Xiao Qiang.";
-            send((int)_cSock, msgBuf, strlen(msgBuf) + 1, 0);
-        }
-        else if (0 == strcmp(_recvBuf, "getAge"))
-        {
-            char msgBuf[] = "80.";
-            send((int)_cSock, msgBuf, strlen(msgBuf) + 1, 0);
-        }
-        else
-        {
-            char msgBuf[] = "???.";
-            // 7 send 向客户端发送一条数据
-            send((int)_cSock, msgBuf, strlen(msgBuf) + 1, 0);
+            case CMD_LOGIN:
+            {
+                Login login = {};
+                recv(_cSock, (char*)&login + sizeof(DataHeader), sizeof(Login) - sizeof(DataHeader), 0);
+                printf("收到命令：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", login.dataLength, login.userName, login.PassWord);
+                //忽略判断用户密码是否正确的过程
+                LoginResult ret;
+                send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
+            }
+            break;
+            case CMD_LOGOUT:
+            {
+                Logout logout = {};
+                recv(_cSock, (char*)&logout + sizeof(DataHeader), sizeof(Logout) - sizeof(DataHeader), 0);
+                printf("收到命令：CMD_LOGIN  数据长度：%d  用户名：%s\n", logout.dataLength, logout.userName);
+                //忽略判断用户密码是否正确的过程
+                LoginResult ret;
+                send(_cSock, (char*)&header, sizeof(DataHeader), 0);
+                send(_cSock, (char*)&ret, sizeof(LoginResult), 0);
+            }
+            break;
+            default:
+                header.cmd = CMD_ERROR;
+                header.dataLength = 0;
+                send(_cSock, (char*)&header, sizeof(DataHeader), 0);
         }
     }
 
