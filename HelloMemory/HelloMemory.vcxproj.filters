@@ -15,15 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="client.cpp">
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Alloctor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EasyTcpClient.hpp">
+    <ClInclude Include="Alloctor.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MessageHeader.hpp">
+    <ClInclude Include="MemoryMgr.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CELLTimestamp.hpp">

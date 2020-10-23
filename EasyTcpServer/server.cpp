@@ -2,6 +2,7 @@
 // g++ server.cpp -std=c++11 -pthread -o server
 // ./server
 
+#include "Alloctor.h"
 #include "EasyTcpServer.hpp"
 #include <thread>
 
@@ -29,19 +30,19 @@ class MyServer :public EasyTcpServer
 {
 public:
     //只会被一个线程调用
-    virtual void OnNetJoin(ClientSocket* pClient)
+    virtual void OnNetJoin(ClientSocketPtr& pClient)
     {
         EasyTcpServer::OnNetJoin(pClient);
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetLeave(ClientSocket* pClient)
+    virtual void OnNetLeave(ClientSocketPtr& pClient)
     {
         EasyTcpServer::OnNetLeave(pClient);
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetMsg(CellServer* pCellServer, ClientSocket* pClient, DataHeader* header)
+    virtual void OnNetMsg(CellServer* pCellServer, ClientSocketPtr& pClient, DataHeader* header)
     {
         EasyTcpServer::OnNetMsg(pCellServer, pClient, header);
         switch (header->cmd)
@@ -49,18 +50,18 @@ public:
             case CMD_LOGIN:
             {
                 //Login* login = (Login*)header;
-                //printf("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", cSock, login->dataLength, login->userName, login->PassWord);
+                //printf("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", pClient->sockfd(), login->dataLength, login->userName, login->PassWord);
                 //忽略判断用户密码是否正确的过程
                 //LoginResult ret;
                 //pClient->SendData(&ret);
-                LoginResult* ret = new LoginResult();
-                pCellServer->addSendTask(pClient, ret);
+                auto ret = std::make_shared<LoginResult>();
+                pCellServer->addSendTask(pClient, (DataHeaderPtr)ret);
             }
             break;
             case CMD_LOGOUT:
             {
                 //Logout* logout = (Logout*)header;
-                //printf("收到客户端<Socket=%d>请求：CMD_LOGOUT  数据长度：%d  用户名：%s\n", cSock, logout->dataLength, logout->userName);
+                //printf("收到客户端<Socket=%d>请求：CMD_LOGOUT  数据长度：%d  用户名：%s\n", pClient->sockfd(), logout->dataLength, logout->userName);
                 //忽略判断用户密码是否正确的过程
                 //LogoutResult ret;
                 //pClient->SendData(&ret);
@@ -75,9 +76,9 @@ public:
         }
     }
 
-    virtual void OnNetRecv(ClientSocket* pClient)
+    virtual void OnNetRecv(ClientSocketPtr pClient)
     {
-        _recvCount++;
+        EasyTcpServer::OnNetRecv(pClient);
     }
 };
 
@@ -102,5 +103,6 @@ int main()
     printf("服务器已退出\n");
     getchar();
     getchar();
+
     return 0;
 }
