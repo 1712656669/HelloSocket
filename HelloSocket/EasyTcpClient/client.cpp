@@ -40,26 +40,23 @@ void cmdThread(EasyTcpClient* client)
 int main()
 {
     EasyTcpClient client1;
-    client1.InitSocket();
-    client1.Connect("192.168.128.1", 4567);
+    client1.Connect("192.168.56.1", 4567);
 
-    //EasyTcpClient client2;
-    //client2.InitSocket();
-    //client2.Connect("192.168.128.128", 4567);
+    EasyTcpClient client2;
+    client2.Connect("192.168.0.127", 4567);
 
-    //EasyTcpClient client3;
-    //client3.InitSocket();
-    //client3.Connect("192.168.128.129", 4567);
+    EasyTcpClient client3;
+    client3.Connect("192.168.0.128", 4567);
 
-     //启动线程
+    //启动线程
     /*std::thread t1(cmdThread, &client1);
-    t1.detach();*/
+    t1.detach();
 
-    //std::thread t2(cmdThread, &client2);
-    //t2.detach();
+    std::thread t2(cmdThread, &client2);
+    t2.detach();
 
-    //std::thread t3(cmdThread, &client3);
-    //t3.detach();
+    std::thread t3(cmdThread, &client3);
+    t3.detach();*/
 
     Login login;
     strcpy(login.userName, "tao");
@@ -67,10 +64,12 @@ int main()
     while (client1.isRun()) // || client2.isRun() || client3.isRun()
     {
         client1.OnRun();
-        /*client2.OnRun();
-        client3.OnRun();*/
+        client2.OnRun();
+        client3.OnRun();
 
         client1.SendData(&login);
+        client2.SendData(&login);
+        client3.SendData(&login);
         //printf("空闲时间处理其他业务...\n");
     }
     client1.Close();
@@ -78,7 +77,7 @@ int main()
     client3.Close();*/
 
     printf("客户端已退出\n");
-    getchar();
-    getchar();
+    //getchar();
+    //getchar();
     return 0;
 }
