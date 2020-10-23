@@ -1,4 +1,4 @@
-#ifndef _MessageHeader_hpp_
+Ôªø#ifndef _MessageHeader_hpp_
 #define _MessageHeader_hpp_
 
 enum CMD
@@ -8,6 +8,8 @@ enum CMD
     CMD_LOGOUT,
     CMD_LOGOUT_RESULT,
     CMD_NEW_USER_JOIN,
+    CMD_C2S_HEART,
+    CMD_S2C_HEART,
     CMD_ERROR
 };
 
@@ -18,8 +20,8 @@ struct DataHeader
         dataLength = sizeof(DataHeader);
         cmd = CMD_ERROR;
     }
-    short dataLength; // ˝æ›≥§∂»
-    short cmd; //√¸¡Ó
+    unsigned short dataLength; //Êï∞ÊçÆÈïøÂ∫¶
+    unsigned short cmd; //ÂëΩ‰ª§
 };
 
 //DataPackage
@@ -73,15 +75,33 @@ struct LogoutResult :public DataHeader
     int result;
 };
 
-struct netmsg_NewUserJoin :public DataHeader
+struct NewUserJoin :public DataHeader
 {
-    netmsg_NewUserJoin()
+    NewUserJoin()
     {
-        dataLength = sizeof(netmsg_NewUserJoin);
+        dataLength = sizeof(NewUserJoin);
         cmd = CMD_NEW_USER_JOIN;
         sock = 0;
     }
     int sock;
+};
+
+struct C2S_Heart :public DataHeader
+{
+    C2S_Heart()
+    {
+        dataLength = sizeof(C2S_Heart);
+        cmd = CMD_C2S_HEART;
+    }
+};
+
+struct S2C_Heart :public DataHeader
+{
+    S2C_Heart()
+    {
+        dataLength = sizeof(S2C_Heart);
+        cmd = CMD_S2C_HEART;
+    }
 };
 
 #endif //_MessageHeader_hpp_

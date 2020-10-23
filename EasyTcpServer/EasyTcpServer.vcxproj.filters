@@ -6,14 +6,17 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="源文件">
-      <UniqueIdentifier>{b92685c2-b34c-428b-8be6-028ec95ccb08}</UniqueIdentifier>
+      <UniqueIdentifier>{dde4d6bd-53ea-47e2-80b8-3a71bf9445bd}</UniqueIdentifier>
     </Filter>
     <Filter Include="头文件">
-      <UniqueIdentifier>{02146fc6-8e24-4e40-8608-372df0066d5e}</UniqueIdentifier>
+      <UniqueIdentifier>{9ac7579d-71e3-4952-af67-febfbffcc566}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Alloctor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CELLTask.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="server.cpp">
@@ -33,10 +36,16 @@
     <ClInclude Include="CELLObjectPool.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CELLSemaphore.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="CELLServer.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CELLTask.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CELLThread.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CELLTimestamp.hpp">

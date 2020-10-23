@@ -1,19 +1,19 @@
-#ifndef _CELL_HPP_
+ï»¿#ifndef _CELL_HPP_
 #define _CELL_HPP_
 
 #ifdef _WIN32
 #define FD_SETSIZE    10000
-#define WIN32_LEAN_AND_MEAN //·ÀÖ¹windows.hºÍWinSock2.hºêÖØ¶¨Òå
-#define _WINSOCK_DEPRECATED_NO_WARNINGS //inet_ntoaº¯Êı£¬¹ıÊ±º¯ÊıÖØĞÂÆôÓÃ
-#define _CRT_SECURE_NO_WARNINGS //scanfº¯ÊıºÍstrcpyº¯Êı
+#define WIN32_LEAN_AND_MEAN //é˜²æ­¢windows.hå’ŒWinSock2.hå®é‡å®šä¹‰
+#define _WINSOCK_DEPRECATED_NO_WARNINGS //inet_ntoaå‡½æ•°ï¼Œè¿‡æ—¶å‡½æ•°é‡æ–°å¯ç”¨
+#define _CRT_SECURE_NO_WARNINGS //scanfå‡½æ•°å’Œstrcpyå‡½æ•°
 //#define SOCKET int
 #include <windows.h>
 #include <WinSock2.h>
-//¾²Ì¬Á´½Ó¿â£¬½âÎöWSAStartupºÍWSACleanup
+//é™æ€é“¾æ¥åº“ï¼Œè§£æWSAStartupå’ŒWSACleanup
 #pragma comment(lib,"ws2_32.lib")
 #else
-#include <unistd.h> //unix std£¬ÀàËÆwindows.h
-#include <arpa/inet.h> //ÀàËÆWinSock2.h
+#include <unistd.h> //unix stdï¼Œç±»ä¼¼windows.h
+#include <arpa/inet.h> //ç±»ä¼¼WinSock2.h
 #include <string.h>
 
 #define SOCKET int
@@ -21,7 +21,7 @@
 #define SOCKET_ERROR            (-1)
 #endif //_WIN32
 
-//×Ô¶¨Òå
+//è‡ªå®šä¹‰
 #include "MessageHeader.hpp"
 #include "CELLTimestamp.hpp"
 #include "CELLTask.hpp"
@@ -29,18 +29,18 @@
 
 #include <stdio.h>
 
-//»º³åÇø×îĞ¡µ¥Ôª´óĞ¡
+//ç¼“å†²åŒºæœ€å°å•å…ƒå¤§å°
 #ifndef RECV_BUFF_SIZE
 #define RECV_BUFF_SIZE 10240
 #define SEND_BUFF_SIZE RECV_BUFF_SIZE
 #endif
 
-class CellS2CTask;
-class CellClient;
-class CellServer;
-typedef std::shared_ptr<CellS2CTask> CellS2CTaskPtr;
-typedef std::shared_ptr<CellClient> CellClientPtr;
-typedef std::shared_ptr<CellServer> CellServerPtr;
+class CELLS2CTask;
+class CELLClient;
+class CELLServer;
+typedef std::shared_ptr<CELLS2CTask> CELLS2CTaskPtr;
+typedef std::shared_ptr<CELLClient> CELLClientPtr;
+typedef std::shared_ptr<CELLServer> CELLServerPtr;
 typedef std::shared_ptr<LoginResult> LoginResultPtr;
 typedef std::shared_ptr<DataHeader> DataHeaderPtr;
 

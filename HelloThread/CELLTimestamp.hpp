@@ -1,4 +1,4 @@
-#ifndef _CELLTimestamp_hpp_
+ï»¿#ifndef _CELLTimestamp_hpp_
 #define _CELLTimestamp_hpp_
 
 #include <chrono>
@@ -20,19 +20,19 @@ public:
 		_begin = high_resolution_clock::now();
 	}
 
-	//»ñÈ¡µ±Ç°Ãî
+	//è·å–å½“å‰å¦™
 	double getElapseSecond()
 	{
 		return getElapseTimeInMicroSec() * 0.000001;
 	}
 
-	//»ñÈ¡ºÁÃî
+	//è·å–æ¯«å¦™
 	double getElapseTimeInMilliSec()
 	{
 		return this->getElapseTimeInMicroSec() * 0.001;
 	}
 
-	//»ñÈ¡Î¢Ãî
+	//è·å–å¾®å¦™
 	long long getElapseTimeInMicroSec()
 	{
 		return duration_cast<microseconds>(high_resolution_clock::now() - _begin).count();

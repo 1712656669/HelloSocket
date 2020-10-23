@@ -1,4 +1,4 @@
-#ifndef _MemoryMgr_hpp_
+ï»¿#ifndef _MemoryMgr_hpp_
 #define _MemoryMgr_hpp_
 
 #include <stdlib.h>
@@ -8,11 +8,11 @@
 #ifdef _DEBUG
 	#ifndef xPrintf
 		#include <stdio.h>
-		#define xPrintf(...) printf(__VA_ARGS__) //ºêÌæ´úº¯Êı£¬¿É±ä²Î
+		#define xPrintf(...) printf(__VA_ARGS__) //å®æ›¿ä»£å‡½æ•°ï¼Œå¯å˜å‚
 	#endif
 #else
 	#ifndef xPrintf
-		#define xPrintf(...)  //±»Ìæ»»Îª¿Õ
+		#define xPrintf(...)  //è¢«æ›¿æ¢ä¸ºç©º
 	#endif
 #endif
 
@@ -20,30 +20,30 @@
 
 class MemoryAlloc;
 
-//ÄÚ´æ¿é ×îĞ¡µ¥Ôª
+//å†…å­˜å— æœ€å°å•å…ƒ
 class MemoryBlock
 {
 public:
-	//ËùÊô´óÄÚ´æ¿é£¨³Ø£©
+	//æ‰€å±å¤§å†…å­˜å—ï¼ˆæ± ï¼‰
 	MemoryAlloc* pAlloc;
-	//ÏÂÒ»¿éÎ»ÖÃ
+	//ä¸‹ä¸€å—ä½ç½®
 	MemoryBlock* pNext;
-	//ÄÚ´æ¿é±àºÅ
+	//å†…å­˜å—ç¼–å·
 	int nID;
-	//ÒıÓÃ´ÎÊı
+	//å¼•ç”¨æ¬¡æ•°
 	int nRef;
-	//ÊÇ·ñÔÚÄÚ´æ³ØÖĞ
+	//æ˜¯å¦åœ¨å†…å­˜æ± ä¸­
 	bool bPool;
 
 private:
-	//Ô¤Áô ÄÚ´æ¶ÔÆë
+	//é¢„ç•™ å†…å­˜å¯¹é½
 	char c1;
 	char c2;
 	char c3;
 
 };
 
-//ÄÚ´æ³Ø
+//å†…å­˜æ± 
 class MemoryAlloc
 {
 public:
@@ -65,23 +65,23 @@ public:
 	}
 
 
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	void InitMemory()
 	{
 		//xPrintf("InitMemory: nSize=%d, nBlocks=%d\n", _nSize, _nBlocks);
-		//¶ÏÑÔ
+		//æ–­è¨€
 		assert(nullptr == _pBuf);
 		if (_pBuf)
 		{
 			return;
 		}
-		//¼ÆËãÄÚ´æ³ØµÄ´óĞ¡
+		//è®¡ç®—å†…å­˜æ± çš„å¤§å°
 		size_t realSize = _nSize + sizeof(MemoryBlock);
 		size_t bufSize = realSize * _nBlocks;
-		//ÏòÏµÍ³ÉêÇë³ØµÄÄÚ´æ
+		//å‘ç³»ç»Ÿç”³è¯·æ± çš„å†…å­˜
 		_pBuf = (char*)malloc(bufSize);
 
-		//³õÊ¼»¯ÄÚ´æ³Ø
+		//åˆå§‹åŒ–å†…å­˜æ± 
 		_pHeader = (MemoryBlock*)_pBuf;
 		_pHeader->pAlloc = this;
 		_pHeader->pNext = nullptr;
@@ -89,7 +89,7 @@ public:
 		_pHeader->nRef = 0;
 		_pHeader->bPool = true;
 
-		//±éÀúÄÚ´æ¿é³õÊ¼»¯
+		//éå†å†…å­˜å—åˆå§‹åŒ–
 		MemoryBlock* pTemp1 = _pHeader;
 
 		for (int n = 1; n < (int)_nBlocks; n++)
@@ -106,7 +106,7 @@ public:
 		}
 	}
 
-	//ÉêÇëÄÚ´æ
+	//ç”³è¯·å†…å­˜
 	void* allocMemory(size_t nSize)
 	{
 		std::lock_guard<std::mutex> lg(_mutex);
@@ -115,7 +115,7 @@ public:
 			InitMemory();
 		}
 		MemoryBlock* pReturn = nullptr;
-		if (nullptr == _pHeader) //ÄÚ´æ²»×ã
+		if (nullptr == _pHeader) //å†…å­˜ä¸è¶³
 		{
 			pReturn = (MemoryBlock*)malloc(nSize + sizeof(MemoryBlock));
 			pReturn->pAlloc = nullptr;
@@ -135,7 +135,7 @@ public:
 		return (char*)pReturn + sizeof(MemoryBlock);
 	}
 
-	//ÊÍ·ÅÄÚ´æ
+	//é‡Šæ”¾å†…å­˜
 	void freeMemory(void* pMem)
 	{
 		MemoryBlock* pBlock = (MemoryBlock*)((char*)pMem - sizeof(MemoryBlock));
@@ -160,36 +160,36 @@ public:
 	}
 
 protected:
-	//ÄÚ´æ³ØµØÖ·
+	//å†…å­˜æ± åœ°å€
 	char* _pBuf;
-	//Í·²¿ÄÚ´æµ¥Ôª
+	//å¤´éƒ¨å†…å­˜å•å…ƒ
 	MemoryBlock* _pHeader;
-	//ÄÚ´æµ¥ÔªµÄ´óĞ¡
+	//å†…å­˜å•å…ƒçš„å¤§å°
 	size_t _nSize;
-	//ÄÚ´æµ¥ÔªµÄÊıÁ¿
+	//å†…å­˜å•å…ƒçš„æ•°é‡
 	size_t _nBlocks;
 	std::mutex _mutex;
 
 };
 
-//±ãÓÚÔÚÉùÃ÷³ÉÔ±±äÁ¿Ê±³õÊ¼»¯MemoryAllocµÄ³ÉÔ±Êı¾İ
+//ä¾¿äºåœ¨å£°æ˜æˆå‘˜å˜é‡æ—¶åˆå§‹åŒ–MemoryAllocçš„æˆå‘˜æ•°æ®
 template<size_t nSize, size_t nBlocks>
 class MemoryAlloctor :public MemoryAlloc
 {
 public:
 	MemoryAlloctor()
 	{
-		//64Î» n = 8  32Î» n = 4
+		//64ä½ n = 8  32ä½ n = 4
 		const size_t n = sizeof(void*);
-		//´«ÈëµÄnSize²»¶ÔÆë nSize = 61   61/8=7  61%8=5
+		//ä¼ å…¥çš„nSizeä¸å¯¹é½ nSize = 61   61/8=7  61%8=5
 		//_nSize = 7*8 + 8 = 64
-		_nSize = (nSize / n) * n + (nSize % n ? n : 0); //ÄÚ´æ¶ÔÆë
+		_nSize = (nSize / n) * n + (nSize % n ? n : 0); //å†…å­˜å¯¹é½
 		_nBlocks = nBlocks;
 	}
 
 };
 
-//ÄÚ´æ¹ÜÀí¹¤¾ß
+//å†…å­˜ç®¡ç†å·¥å…·
 class MemoryMgr
 {
 private:
@@ -211,12 +211,12 @@ private:
 public:
 	static MemoryMgr& Instance()
 	{
-		//µ¥ÀıÄ£Ê½
+		//å•ä¾‹æ¨¡å¼
 		static MemoryMgr mgr;
 		return mgr;
 	}
 
-	//ÉêÇëÄÚ´æ
+	//ç”³è¯·å†…å­˜
 	void* allocMem(size_t nSize)
 	{
 		if (nSize <= MAX_MEMORY_SIZE)
@@ -236,7 +236,7 @@ public:
 		}
 	}
 
-	//ÊÍ·ÅÄÚ´æ
+	//é‡Šæ”¾å†…å­˜
 	void freeMem(void* pMem)
 	{
 		MemoryBlock* pBlock = (MemoryBlock*)((char*)pMem - sizeof(MemoryBlock));
@@ -254,7 +254,7 @@ public:
 		}
 	}
 
-	//Ôö¼ÓÄÚ´æ¿éµÄÒıÓÃ¼ÆÊı
+	//å¢åŠ å†…å­˜å—çš„å¼•ç”¨è®¡æ•°
 	void addRef(void* pMem)
 	{
 		MemoryBlock* pBlock = (MemoryBlock*)((char*)pMem - sizeof(MemoryBlock));
@@ -262,7 +262,7 @@ public:
 	}
 
 private:
-	//³õÊ¼»¯ÄÚ´æ³ØÓ³ÉäÊı×é
+	//åˆå§‹åŒ–å†…å­˜æ± æ˜ å°„æ•°ç»„
 	void init_szAlloc(int nBegin, int nEnd, MemoryAlloc* pMemA)
 	{
 		for (int n = nBegin; n <= nEnd; n++)

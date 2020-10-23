@@ -1,20 +1,20 @@
-#ifndef _I_NET_EVENT_HPP_
+ï»¿#ifndef _I_NET_EVENT_HPP_
 #define _I_NET_EVENT_HPP_
 
 #include "CELL.hpp"
 
-//ÍøÂçÊÂ¼ş½Ó¿Ú
+//ç½‘ç»œäº‹ä»¶æ¥å£
 class INetEvent
 {
 public:
-    //¿Í»§¶Ë¼ÓÈëÊÂ¼ş
-    virtual void OnNetJoin(CellClientPtr& pClient) = 0;
-    //¿Í»§¶ËÀë¿ªÊÂ¼ş
-    virtual void OnNetLeave(CellClientPtr& pClient) = 0;
-    //¿Í»§¶ËÏûÏ¢ÊÂ¼ş
-    virtual void OnNetMsg(CellServer* pCellServer, CellClientPtr& pClient, DataHeaderPtr& header) = 0;
-    //recvÊÂ¼ş
-    virtual void OnNetRecv(CellClientPtr& pClient) = 0;
+    //å®¢æˆ·ç«¯åŠ å…¥äº‹ä»¶
+    virtual void OnNetJoin(CELLClientPtr& pClient) = 0;
+    //å®¢æˆ·ç«¯ç¦»å¼€äº‹ä»¶
+    virtual void OnNetLeave(CELLClientPtr& pClient) = 0;
+    //å®¢æˆ·ç«¯æ¶ˆæ¯äº‹ä»¶
+    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeaderPtr& header) = 0;
+    //recväº‹ä»¶
+    virtual void OnNetRecv(CELLClientPtr& pClient) = 0;
 };
 
 #endif // !_I_NET_EVENT_HPP_

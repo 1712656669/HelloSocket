@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Alloctor.cpp" />
+    <ClCompile Include="CELLTask.cpp" />
     <ClCompile Include="server.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -27,8 +28,10 @@
     <ClInclude Include="CELL.hpp" />
     <ClInclude Include="CELLClient.hpp" />
     <ClInclude Include="CELLObjectPool.hpp" />
+    <ClInclude Include="CELLSemaphore.hpp" />
     <ClInclude Include="CELLServer.hpp" />
     <ClInclude Include="CELLTask.hpp" />
+    <ClInclude Include="CELLThread.hpp" />
     <ClInclude Include="CELLTimestamp.hpp" />
     <ClInclude Include="EasyTcpServer.hpp" />
     <ClInclude Include="INetEvent.hpp" />

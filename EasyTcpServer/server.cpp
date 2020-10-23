@@ -30,32 +30,33 @@ class MyServer :public EasyTcpServer
 {
 public:
     //只会被一个线程调用
-    virtual void OnNetJoin(CellClientPtr& pClient)
+    virtual void OnNetJoin(CELLClientPtr& pClient)
     {
         EasyTcpServer::OnNetJoin(pClient);
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetLeave(CellClientPtr& pClient)
+    virtual void OnNetLeave(CELLClientPtr& pClient)
     {
         EasyTcpServer::OnNetLeave(pClient);
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetMsg(CellServer* pCellServer, CellClientPtr& pClient, DataHeaderPtr& header)
+    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeaderPtr& header)
     {
-        EasyTcpServer::OnNetMsg(pCellServer, pClient, header);
+        EasyTcpServer::OnNetMsg(pCELLServer, pClient, header);
         switch (header->cmd)
         {
             case CMD_LOGIN:
             {
+                pClient->resetDTHeart(); //心跳时间重置
                 //Login* Login = (Login*)header;
                 //printf("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", pClient->sockfd(), Login->dataLength, Login->userName, Login->PassWord);
                 //忽略判断用户密码是否正确的过程
-                //LoginResult ret;
-                //pClient->SendData(&ret);
-                auto ret = std::make_shared<LoginResult>();
-                pCellServer->addSendTask(pClient, (DataHeaderPtr)ret);
+                LoginResult ret;
+                pClient->SendData(&ret);
+                //auto ret = std::make_shared<LoginResult>();
+                //pCELLServer->addSendTask(pClient, (DataHeaderPtr)ret);
             }
             break;
             case CMD_LOGOUT:
@@ -67,6 +68,12 @@ public:
                 //pClient->SendData(&ret);
             }
             break;
+            case CMD_C2S_HEART:
+            {
+                pClient->resetDTHeart();
+                C2S_Heart ret;
+                pClient->SendData(&ret);
+            }
             default:
             {
                 printf("<socket=%d>收到未定义消息  数据长度：%d\n", (int)(pClient->sockfd()), header->dataLength);
@@ -76,7 +83,7 @@ public:
         }
     }
 
-    virtual void OnNetRecv(CellClientPtr pClient)
+    virtual void OnNetRecv(CELLClientPtr pClient)
     {
         EasyTcpServer::OnNetRecv(pClient);
     }
@@ -101,6 +108,18 @@ int main()
     }
     server.Close();
     printf("服务器已退出\n");
+
+    /*
+    CELLTaskServer task;
+    task.Start();
+    Sleep(100);
+    task.Close();
+    */
+
+    /*while (true)
+    {
+        Sleep(100);
+    }*/
     getchar();
     getchar();
 

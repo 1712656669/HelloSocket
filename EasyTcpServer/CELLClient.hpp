@@ -1,24 +1,46 @@
-#ifndef _CELL_CLIENT_HPP_
+ï»¿#ifndef _CELL_CLIENT_HPP_
 #define _CELL_CLIENT_HPP_
 
 #include "CELL.hpp"
 
-//¿Í»§¶ËÊı¾İÀàĞÍ
-class CellClient :public ObjectPoolBase<CellClient, 10>
+//å®¢æˆ·ç«¯å¿ƒè·³æ£€æµ‹æ­»äº¡è®¡æ—¶æ—¶é—´
+#define CLIENT_HEART_DEAD_TIME 60000 //æ¯«ç§’
+//åœ¨é—´éš”æŒ‡å®šæ—¶é—´å
+//æŠŠå‘é€ç¼“å†²åŒºå†…ç¼“å­˜çš„æ•°æ®æ•°æ®å‘é€ç»™å®¢æˆ·ç«¯
+#define CLIENT_SEND_BUFF_TIME 200 //æ¯«ç§’
+
+//å®¢æˆ·ç«¯æ•°æ®ç±»å‹
+class CELLClient :public ObjectPoolBase<CELLClient, 10>
 {
 public:
-    CellClient(SOCKET sockfd = INVALID_SOCKET)
+    CELLClient(SOCKET sockfd = INVALID_SOCKET)
     {
+        static int n = 1;
+        id = n++;
+
         _sockfd = sockfd;
         memset(_szMsgBuf, 0, RECV_BUFF_SIZE);
+
         _lastPos = 0;
         memset(_szSendBuf, 0, SEND_BUFF_SIZE);
         _lastSendPos = 0;
+
+        resetDTHeart();
+        resetDTSend();
     }
 
-    ~CellClient()
+    ~CELLClient()
     {
-
+        printf("s=%d CELLClient%d.~CELLClient\n", serverId, id);
+        if(INVALID_SOCKET != _sockfd)
+        {
+#ifdef _WIN32
+            closesocket(_sockfd);
+#else
+            closes(_sockfd);
+#endif // !_WIN32
+            _sockfd = INVALID_SOCKET;
+        }
     }
 
     SOCKET sockfd()
@@ -41,31 +63,56 @@ public:
         _lastPos = pos;
     }
 
-    //·¢ËÍÊı¾İ
-    int SendData(DataHeaderPtr header)
+    //ç«‹å³å‘é€æ•°æ®
+    int SendDataReal(DataHeader* header)
+    {
+        SendData(header);
+        SendDataReal();
+    }
+
+    //ç«‹å³å°†å‘é€ç¼“å†²åŒºçš„æ•°æ®å‘é€ç»™å®¢æˆ·ç«¯
+    int SendDataReal()
     {
         int ret = SOCKET_ERROR;
-        //Òª·¢ËÍµÄÊı¾İ³¤¶È
+        //ç¼“å†²åŒºæœ‰æ•°æ®
+        if (_lastSendPos > 0 && SOCKET_ERROR != _sockfd)
+        {
+            ret = (int)send(_sockfd, _szSendBuf, _lastSendPos, 0);
+            //æ•°æ®å°¾éƒ¨ä½ç½®æ¸…é›¶
+            _lastSendPos = 0;
+            //
+            resetDTSend();
+        }
+        return ret;
+    }
+
+    //å‘é€æ•°æ®
+    int SendData(DataHeader* header)
+    {
+        int ret = SOCKET_ERROR;
+        //è¦å‘é€çš„æ•°æ®é•¿åº¦
         int nSendLen = header->dataLength;
-        //Òª·¢ËÍµÄÊı¾İ
-        const char* pSendData = (const char*)header.get();
+        //è¦å‘é€çš„æ•°æ®
+        const char* pSendData = (const char*)header;
         while (true)
         {
             if (_lastSendPos + nSendLen >= SEND_BUFF_SIZE)
             {
-                //¼ÆËã¿É¿½±´µÄÊı¾İ³¤¶È
+                //è®¡ç®—å¯æ‹·è´çš„æ•°æ®é•¿åº¦
                 int nCopyLen = SEND_BUFF_SIZE - _lastSendPos;
-                //¿½±´Êı¾İ
+                //æ‹·è´æ•°æ®
                 memcpy(_szSendBuf + _lastSendPos, pSendData, nCopyLen);
-                //¼ÆËãÊ£ÓàÊı¾İÎ»ÖÃ
+                //è®¡ç®—å‰©ä½™æ•°æ®ä½ç½®
                 pSendData += nCopyLen;
-                //¼ÆËãÊ£ÓàÊı¾İ³¤¶È
+                //è®¡ç®—å‰©ä½™æ•°æ®é•¿åº¦
                 nSendLen -= nCopyLen;
-                //·¢ËÍÊı¾İ
+                //å‘é€æ•°æ®
                 ret = (int)send(_sockfd, _szSendBuf, SEND_BUFF_SIZE, 0);
-                //Êı¾İÎ²²¿Î»ÖÃÇåÁã
+                //æ•°æ®å°¾éƒ¨ä½ç½®æ¸…é›¶
                 _lastSendPos = 0;
-                //·¢ËÍ´íÎó
+                //
+                resetDTSend();
+                //å‘é€é”™è¯¯
                 if (SOCKET_ERROR == ret)
                 {
                     return ret;
@@ -73,9 +120,9 @@ public:
             }
             else
             {
-                //½«Òª·¢ËÍµÄÊı¾İ¿½±´µ½·¢ËÍ»º³åÇøÎ²²¿
+                //å°†è¦å‘é€çš„æ•°æ®æ‹·è´åˆ°å‘é€ç¼“å†²åŒºå°¾éƒ¨
                 memcpy(_szSendBuf + _lastSendPos, pSendData, nSendLen);
-                //¼ÆËãÊı¾İÎ²²¿Î»ÖÃ
+                //è®¡ç®—æ•°æ®å°¾éƒ¨ä½ç½®
                 _lastSendPos += nSendLen;
                 break;
             }
@@ -83,17 +130,63 @@ public:
         return ret;
     }
 
+    void resetDTHeart()
+    {
+        _dtHeart = 0;
+    }
+
+    void resetDTSend()
+    {
+        _dtSend = 0;
+    }
+
+    //å¿ƒè·³æ£€æµ‹
+    bool checkHeart(time_t dt)
+    {
+        _dtHeart += dt;
+        if (_dtHeart >= CLIENT_HEART_DEAD_TIME)
+        {
+            printf("checkHeart dead:s=%d, time=%lld\n", (int)_sockfd, _dtHeart);
+            return true;
+        }
+        return false;
+    }
+
+    //å®šæ—¶å‘é€æ¶ˆæ¯æ£€æµ‹
+    bool checkSend(time_t dt)
+    {
+        _dtSend += dt;
+        if (_dtSend >= CLIENT_SEND_BUFF_TIME)
+        {
+            //printf("checkSend:s=%d, time=%lld\n", _sockfd, _dtSend);
+            //ç«‹å³å°†ç¼“å†²åŒºçš„æ•°æ®å‘é€å‡ºå»
+            SendDataReal();
+            //é‡ç½®å‘é€è®¡æ—¶
+            resetDTSend();
+            return true;
+        }
+        return false;
+    }
+
 private:
     //fd_set file desc set
     SOCKET _sockfd;
-    //µÚ¶ş»º³åÇø ÏûÏ¢»º³åÇø
+    //ç¬¬äºŒç¼“å†²åŒº æ¶ˆæ¯ç¼“å†²åŒº
     char _szMsgBuf[RECV_BUFF_SIZE];
-    //ÏûÏ¢»º³åÇøµÄÊı¾İÎ²²¿Î»ÖÃ
+    //æ¶ˆæ¯ç¼“å†²åŒºçš„æ•°æ®å°¾éƒ¨ä½ç½®
     int _lastPos;
-    //µÚ¶ş»º³åÇø ·¢ËÍ»º³åÇø
+    //ç¬¬äºŒç¼“å†²åŒº å‘é€ç¼“å†²åŒº
     char _szSendBuf[SEND_BUFF_SIZE];
-    //·¢ËÍ»º³åÇøµÄÊı¾İÎ²²¿Î»ÖÃ
+    //å‘é€ç¼“å†²åŒºçš„æ•°æ®å°¾éƒ¨ä½ç½®
     int _lastSendPos;
+    //å¿ƒè·³æ­»äº¡è®¡æ—¶
+    time_t _dtHeart;
+    //ä¸Šæ¬¡å‘é€æ¶ˆæ¯æ•°æ®æ—¶é—´
+    time_t _dtSend;
+public:
+    int id;
+    //æ‰€å±server id
+    int serverId = -1;
 };
 
 #endif // !_CELL_CLIENT_HPP_

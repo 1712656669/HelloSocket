@@ -1,4 +1,4 @@
-#ifndef _ALLOCTOR_H_
+﻿#ifndef _ALLOCTOR_H_
 #define _ALLOCTOR_H_
 
 void* operator new(size_t size);

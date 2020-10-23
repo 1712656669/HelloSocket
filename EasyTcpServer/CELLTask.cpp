@@ -1,10 +1,10 @@
-#ifndef _CELL_TASK_H_
+ï»¿#ifndef _CELL_TASK_H_
 
 #include <thread>
 #include <mutex>
 #include <list>
 
-//ÈÎÎñ»ùÀàĞÍ
+//ä»»åŠ¡åŸºç±»å‹
 class CellTask
 {
 public:
@@ -18,7 +18,7 @@ public:
 	
 	}
 
-	//Ö´ĞĞÈÎÎñ
+	//æ‰§è¡Œä»»åŠ¡
 	virtual void doTask()
 	{
 
@@ -27,15 +27,15 @@ public:
 private:
 
 };
-//Ö´ĞĞÈÎÎñµÄ·şÎñÀàĞÍ
+//æ‰§è¡Œä»»åŠ¡çš„æœåŠ¡ç±»å‹
 class CellTaskServer
 {
 private:
-	//ÈÎÎñÊı¾İ
+	//ä»»åŠ¡æ•°æ®
 	std::list<CellTask*> _tasks;
-	//ÈÎÎñÊı¾İ»º³åÇø
+	//ä»»åŠ¡æ•°æ®ç¼“å†²åŒº
 	std::list<CellTask*> _tasksBuf;
-	//¸Ä±äÊı¾İ»º³åÇøÊ±ĞèÒª¼ÓËø
+	//æ”¹å˜æ•°æ®ç¼“å†²åŒºæ—¶éœ€è¦åŠ é”
 	std::mutex _mutex;
 
 public:
@@ -49,7 +49,7 @@ public:
 	
 	}
 
-	//Ìí¼ÓÈÎÎñ
+	//æ·»åŠ ä»»åŠ¡
 	void addTask(CellTask* task)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
@@ -58,13 +58,13 @@ public:
 		//_mutex.unlock();
 	}
 
-	//Æô¶¯·şÎñ
+	//å¯åŠ¨æœåŠ¡
 	void Start()
 	{
 
 	}
 
-	//¹¤×÷º¯Êı
+	//å·¥ä½œå‡½æ•°
 	void OnRun()
 	{
 	

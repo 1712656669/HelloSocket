@@ -1,4 +1,4 @@
-#ifndef _CELLObjectPool_hpp_
+ï»¿#ifndef _CELLObjectPool_hpp_
 #define _CELLObjectPool_hpp_
 
 #include <stdlib.h>
@@ -8,11 +8,11 @@
 #ifdef _DEBUG
 	#ifndef xPrintf
 		#include <stdio.h>
-		#define xPrintf(...) printf(__VA_ARGS__) //ºêÌæ´úº¯Êı£¬¿É±ä²Î
+		#define xPrintf(...) printf(__VA_ARGS__) //å®æ›¿ä»£å‡½æ•°ï¼Œå¯å˜å‚
 	#endif
 #else
 	#ifndef xPrintf
-		#define xPrintf(...)  //±»Ìæ»»Îª¿Õ
+		#define xPrintf(...)  //è¢«æ›¿æ¢ä¸ºç©º
 	#endif
 #endif
 
@@ -37,39 +37,39 @@ private:
 	class NodeHeader
 	{
 	public:
-		//ÏÂÒ»¿éÎ»ÖÃ
+		//ä¸‹ä¸€å—ä½ç½®
 		NodeHeader* pNext;
-		//ÄÚ´æ¿é±àºÅ
+		//å†…å­˜å—ç¼–å·
 		int nID;
-		//ÒıÓÃ´ÎÊı
+		//å¼•ç”¨æ¬¡æ•°
 		char nRef;
-		//ÊÇ·ñÔÚÄÚ´æ³ØÖĞ
+		//æ˜¯å¦åœ¨å†…å­˜æ± ä¸­
 		bool bPool;
 	private:
-		//Ô¤Áô ÄÚ´æ¶ÔÆë
+		//é¢„ç•™ å†…å­˜å¯¹é½
 		char c1;
 		char c2;
 	};
 	
 private:
-	//³õÊ¼»¯¶ÔÏó³Ø
+	//åˆå§‹åŒ–å¯¹è±¡æ± 
 	void InitPool()
 	{
-		//¶ÏÑÔ
+		//æ–­è¨€
 		assert(nullptr == _pBuf);
-		//¼ÆËãÄÚ´æ³ØµÄ´óĞ¡
+		//è®¡ç®—å†…å­˜æ± çš„å¤§å°
 		size_t realSize = sizeof(Type) + sizeof(NodeHeader);
 		size_t bufSize = nPools * realSize;
-		//ÏòÏµÍ³ÉêÇë³ØµÄÄÚ´æ
+		//å‘ç³»ç»Ÿç”³è¯·æ± çš„å†…å­˜
 		_pBuf = new char[bufSize];
-		//³õÊ¼»¯ÄÚ´æ³Ø
+		//åˆå§‹åŒ–å†…å­˜æ± 
 		_pHeader = (NodeHeader*)_pBuf;
 		_pHeader->pNext = nullptr;
 		_pHeader->nID = 0;
 		_pHeader->nRef = 0;
 		_pHeader->bPool = true;
 
-		//±éÀúÄÚ´æ¿é³õÊ¼»¯
+		//éå†å†…å­˜å—åˆå§‹åŒ–
 		NodeHeader* pTemp1 = _pHeader;
 
 		for (int n = 1; n < (int)nPools; n++)
@@ -87,12 +87,12 @@ private:
 	}
 
 public:
-	//ÉêÇë¶ÔÏóÄÚ´æ
+	//ç”³è¯·å¯¹è±¡å†…å­˜
 	void* allocObjMemory(size_t nSize)
 	{
 		std::lock_guard<std::mutex> lg(_mutex);
 		NodeHeader* pReturn = nullptr;
-		if (nullptr == _pHeader) //ÄÚ´æ²»×ã
+		if (nullptr == _pHeader) //å†…å­˜ä¸è¶³
 		{
 			pReturn = (NodeHeader*)new char[sizeof(Type) + sizeof(NodeHeader)];
 			pReturn->pNext = nullptr;
@@ -111,7 +111,7 @@ public:
 		return (char*)pReturn + sizeof(NodeHeader);
 	}
 
-	//ÊÍ·Å¶ÔÏó
+	//é‡Šæ”¾å¯¹è±¡
 	void freeObjMemory(void* pMem)
 	{
 		NodeHeader* pBlock = (NodeHeader*)((char*)pMem - sizeof(NodeHeader));
@@ -138,9 +138,9 @@ public:
 	}
 
 private:
-	//Í·²¿ÄÚ´æµ¥Ôª
+	//å¤´éƒ¨å†…å­˜å•å…ƒ
 	NodeHeader* _pHeader;
-	//¶ÔÏó³ØÄÚ´æ»º´æÇøµØÖ·
+	//å¯¹è±¡æ± å†…å­˜ç¼“å­˜åŒºåœ°å€
 	char* _pBuf;
 	//
 	std::mutex _mutex;
@@ -160,11 +160,11 @@ public:
 		ObjectPool().freeObjMemory(p);
 	}
 
-	template<typename ... Args>//²»¶¨²ÎÊı ¿É±ä²ÎÊı
+	template<typename ... Args>//ä¸å®šå‚æ•° å¯å˜å‚æ•°
 	static Type* creatObject(Args ... args)
 	{
 		Type* obj = new Type(args ...);
-		//¿ÉÒÔÌí¼ÓÆäËû´úÂë
+		//å¯ä»¥æ·»åŠ å…¶ä»–ä»£ç 
 		return obj;
 	}
 
@@ -178,7 +178,7 @@ private:
 
 	static classTPool& ObjectPool()
 	{
-		//¾²Ì¬CELLObjectPool¶ÔÏó
+		//é™æ€CELLObjectPoolå¯¹è±¡
 		static classTPool sPool;
 		return sPool;
 	}
