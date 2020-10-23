@@ -5,7 +5,8 @@
 #include "EasyTcpClient.hpp"
 #include <thread>
 
-void cmdThread(EasyTcpClient* client)
+bool g_bRun = true;
+void cmdThread()
 {
     while (true)
     {
@@ -13,22 +14,9 @@ void cmdThread(EasyTcpClient* client)
         scanf("%s", cmdBuf);
         if (0 == strcmp(cmdBuf, "exit"))
         {
-            client->Close();
+            g_bRun = false;
             printf("退出cmdThread线程\n");
             break;
-        }
-        else if (0 == strcmp(cmdBuf, "login"))
-        {
-            Login login;
-            strcpy(login.userName, "tao");
-            strcpy(login.PassWord, "mm");
-            client->SendData(&login);
-        }
-        else if (0 == strcmp(cmdBuf, "logout"))
-        {
-            Logout logout;
-            strcpy(logout.userName, "tao");
-            client->SendData(&logout);
         }
         else
         {
@@ -39,43 +27,48 @@ void cmdThread(EasyTcpClient* client)
 
 int main()
 {
-    EasyTcpClient client1;
-    client1.InitSocket();
-    client1.Connect("192.168.128.1", 4567);
-
-    //EasyTcpClient client2;
-    //client2.InitSocket();
-    //client2.Connect("192.168.128.128", 4567);
-
-    //EasyTcpClient client3;
-    //client3.InitSocket();
-    //client3.Connect("192.168.128.129", 4567);
-
-     //启动线程
-    /*std::thread t1(cmdThread, &client1);
-    t1.detach();*/
-
-    //std::thread t2(cmdThread, &client2);
-    //t2.detach();
-
-    //std::thread t3(cmdThread, &client3);
-    //t3.detach();
+    const int cCount = 100; //最大连接数-服务端个数FD_SETSIZE - 1
+    EasyTcpClient* client[cCount];
+    for (int n = 0; n < cCount; n++)
+    {
+        if (!g_bRun)
+        {
+            return 0;
+        }
+        client[n] = new EasyTcpClient();
+    }
+    for (int n = 0; n < cCount; n++)
+    {
+        if (!g_bRun)
+        {
+            return 0;
+        }
+        client[n]->InitSocket();
+        client[n]->Connect("127.0.0.1", 4567);
+        printf("Connect=%d\n", n);
+    }
+ 
+    //启动线程
+    std::thread t1(cmdThread);
+    t1.detach();
 
     Login login;
     strcpy(login.userName, "tao");
     strcpy(login.PassWord, "mm");
-    while (client1.isRun()) // || client2.isRun() || client3.isRun()
+    while (g_bRun)
     {
-        client1.OnRun();
-        /*client2.OnRun();
-        client3.OnRun();*/
-
-        client1.SendData(&login);
+        for (int n = 0; n < cCount; n++)
+        {
+            client[n]->SendData(&login);
+            client[n]->OnRun();
+        }
         //printf("空闲时间处理其他业务...\n");
     }
-    client1.Close();
-    /*client2.Close();
-    client3.Close();*/
+
+    for (int n = 0; n < cCount; n++)
+    {
+        client[n]->Close();
+    }
 
     printf("客户端已退出\n");
     getchar();

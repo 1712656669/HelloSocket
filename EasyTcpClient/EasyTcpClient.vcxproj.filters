@@ -10,7 +10,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="头文件">
-      <UniqueIdentifier>{784f7650-6466-48f8-9696-b4b89215c37c}</UniqueIdentifier>
+      <UniqueIdentifier>{6dc736a0-ed09-49d9-90cc-694f28887cc4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

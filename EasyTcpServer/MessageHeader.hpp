@@ -13,6 +13,11 @@ enum CMD
 
 struct DataHeader
 {
+    DataHeader()
+    {
+        dataLength = sizeof(DataHeader);
+        cmd = CMD_ERROR;
+    }
     short dataLength; //数据长度
     short cmd; //命令
 };
@@ -24,11 +29,13 @@ struct Login :public DataHeader
     {
         dataLength = sizeof(Login);
         cmd = CMD_LOGIN;
-        *userName = '\0';
-        *PassWord = '\0';
+        memset(userName, 0, sizeof(userName));
+        memset(PassWord, 0, sizeof(PassWord));
+        memset(data, 0, sizeof(data));
     }
     char userName[32];
     char PassWord[32];
+    char data[932];
 };
 
 struct LoginResult :public DataHeader
@@ -38,9 +45,10 @@ struct LoginResult :public DataHeader
         dataLength = sizeof(LoginResult);
         cmd = CMD_LOGIN_RESULT;
         result = 0;
+        memset(data, 0, sizeof(data));
     }
     int result;
-    char data[1024];
+    char data[992];
 };
 
 struct Logout :public DataHeader
@@ -49,7 +57,7 @@ struct Logout :public DataHeader
     {
         dataLength = sizeof(Logout);
         cmd = CMD_LOGOUT;
-        *userName = '\0';
+        memset(userName, 0, sizeof(userName));
     }
     char userName[32];
 };
