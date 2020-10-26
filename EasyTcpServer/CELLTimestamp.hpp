@@ -1,7 +1,8 @@
-﻿#ifndef _CELLTimestamp_hpp_
-#define _CELLTimestamp_hpp_
+﻿#ifndef _CELL_TIMESTAMP_HPP_
+#define _CELL_TIMESTAMP_HPP_
 
 #include <chrono>
+
 using namespace std::chrono;
 
 class CELLTime
@@ -48,8 +49,9 @@ public:
 	{
 		return duration_cast<microseconds>(high_resolution_clock::now() - _begin).count();
 	}
+
 protected:
 	time_point<high_resolution_clock> _begin;
 };
 
-#endif //_CELLTimestamp_hpp_
+#endif // !_CELL_TIMESTAMP_HPP_

@@ -16,9 +16,6 @@
     <ClCompile Include="Alloctor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CELLTask.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

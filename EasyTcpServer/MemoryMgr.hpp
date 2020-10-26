@@ -1,5 +1,5 @@
-﻿#ifndef _MemoryMgr_hpp_
-#define _MemoryMgr_hpp_
+﻿#ifndef _MEMORY_MGR_HPP_
+#define _MEMORY_MGR_HPP_
 
 #include <stdlib.h>
 #include <assert.h>
@@ -198,9 +198,9 @@ private:
 		//xPrintf("MemoryMgr\n");
 		init_szAlloc(0, 64, &_mem64);
 		init_szAlloc(65, 128, &_mem128);
-		init_szAlloc(129, 256, &_mem256);
-		init_szAlloc(257, 512, &_mem512);
-		init_szAlloc(513, 1024, &_mem1024);
+		//init_szAlloc(129, 256, &_mem256);
+		//init_szAlloc(257, 512, &_mem512);
+		//init_szAlloc(513, 1024, &_mem1024);
 	}
 
 	~MemoryMgr()
@@ -272,12 +272,12 @@ private:
 	}
 
 private:
-	MemoryAlloctor<64, 400000> _mem64;
-	MemoryAlloctor<128, 400000> _mem128;
+	MemoryAlloctor<64, 500000> _mem64;
+	MemoryAlloctor<128, 500000> _mem128;
 	MemoryAlloctor<256, 100000> _mem256;
 	MemoryAlloctor<512, 100000> _mem512;
 	MemoryAlloctor<1024, 100000> _mem1024;
 	MemoryAlloc* _szAlloc[MAX_MEMORY_SIZE + 1];
 };
 
-#endif // _MemoryMgr_hpp_
+#endif // !_MEMORY_MGR_HPP_

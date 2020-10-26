@@ -1,5 +1,5 @@
-﻿#ifndef _EasyTcpClient_hpp_
-#define _EasyTcpClient_hpp_
+﻿#ifndef _EASY_TCP_CLIENT_HPP_
+#define _EASY_TCP_CLIENT_HPP_
 
 #ifdef _WIN32
     #define FD_SETSIZE    10000
@@ -32,19 +32,19 @@ class EasyTcpClient
 {
 private:
     SOCKET _sock;
-    bool _isConnect;
-    //第二缓冲区 消息缓冲区
-    char _szMsgBuf[RECV_BUFF_SIZE];
     //消息缓冲区的数据尾部位置
     int _lastPos;
+    bool _isConnect;
+    //第二缓冲区 消息缓冲区
+    char _szMsgBuf[RECV_BUFF_SIZE]; 
 
 public:
     EasyTcpClient()
     {
         _sock = INVALID_SOCKET;
+        _lastPos = 0;
         _isConnect = false;
         memset(_szMsgBuf, 0, sizeof(_szMsgBuf));
-        _lastPos = 0;
     }
 
     virtual ~EasyTcpClient()
@@ -129,7 +129,7 @@ public:
             fd_set fdReads;
             FD_ZERO(&fdReads);
             FD_SET(_sock, &fdReads);
-            timeval t = { 0,0 }; //s,ms
+            timeval t = { 0,0 }; //s,us
             int ret = select((int)_sock + 1, &fdReads, 0, 0, &t);
             if (ret < 0) //select错误
             {
@@ -164,8 +164,6 @@ public:
             printf("<socket=%d>与服务器断开连接，任务结束。\n", (int)cSock);
             return -1;
         }
-        //将收取收取到的数据拷贝到消息缓冲区
-        //memcpy(_szMsgBuf + _lastPos, _szRecv, nlen);
         //消息缓冲区的数据尾部位置后移
         _lastPos += nlen;
         //判断消息缓冲区的数据长度大于消息头DataHeader长度
@@ -252,4 +250,4 @@ public:
     }
 };
 
-#endif //_EasyTcpClient_hpp_
+#endif // !_EASY_TCP_CLIENT_HPP_

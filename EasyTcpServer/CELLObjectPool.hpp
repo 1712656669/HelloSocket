@@ -1,5 +1,5 @@
-﻿#ifndef _CELLObjectPool_hpp_
-#define _CELLObjectPool_hpp_
+﻿#ifndef _CELL_OBJECT_POOL_HPP_
+#define _CELL_OBJECT_POOL_HPP_
 
 #include <stdlib.h>
 #include <assert.h>
@@ -186,4 +186,4 @@ private:
 
 };
 
-#endif // !_CELLObjectPool_hpp_
+#endif // !_CELL_OBJECT_POOL_HPP_

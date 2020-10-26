@@ -1,10 +1,10 @@
-﻿#ifndef _CELL_TASK_H_
-#define _CELL_TASK_H_
+﻿#ifndef _CELL_TASK_HPP_
+#define _CELL_TASK_HPP_
 
 #include <thread>
 #include <mutex>
 #include <list>
-#include "CELLSemaphore.hpp"
+#include "CELLThread.hpp"
 
 #include <functional>
 
@@ -24,8 +24,8 @@ private:
 	//改变数据缓冲区时需要加锁
 	std::mutex _mutex;
 	//
-	bool _isRun = false;
-	CELLSemaphore _sem;
+	CELLThread _thread;
+
 public:
 
 	//添加任务
@@ -40,29 +40,23 @@ public:
 	//启动工作线程
 	void Start()
 	{
-		_isRun = true;
-		//线程
-		//std::mem_fn(&CELLTaskServer::OnRun)
-		std::thread t(&CELLTaskServer::OnRun, this);
-		t.detach();
+		_thread.Start(nullptr, [this](CELLThread* pThread) {
+			OnRun(pThread);
+		}, nullptr);
 	}
 
 	void Close()
 	{
 		printf("CELLTaskServer%d.Close begin\n", serverId);
-		if (_isRun)
-		{
-			_isRun = false;
-			_sem.wait();
-		}
+		_thread.Close();
 		printf("CELLTaskServer%d.Close end\n", serverId);
 	}
 
 protected:
 	//工作函数
-	void OnRun()
+	void OnRun(CELLThread* pThread)
 	{
-		while (_isRun)
+		while (_thread.isRun())
 		{
 			//从缓冲区取出数据
 			if (!_tasksBuf.empty())
@@ -90,9 +84,8 @@ protected:
 			_tasks.clear();
 		}
 		printf("CELLTaskServer%d.OnRun exit\n", serverId);
-		_sem.wakeup();
 	}
 
 };
 
-#endif // !_CELL_TASK_H_
+#endif // !_CELL_TASK_HPP_

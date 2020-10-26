@@ -1,4 +1,5 @@
-﻿#ifndef _CELL_TASK_H_
+﻿#ifndef _CELL_TASK_HPP_
+#define _CELL_TASK_HPP_
 
 #include <thread>
 #include <mutex>
@@ -23,12 +24,10 @@ public:
 	{
 
 	}
-
-private:
-
 };
 
 typedef std::shared_ptr<CELLTask> CELLTaskPtr;
+
 //执行任务的服务类型
 class CELLTaskServer
 {
@@ -41,7 +40,6 @@ private:
 	std::mutex _mutex;
 
 public:
-
 	//添加任务
 	void addTask(CELLTaskPtr task)
 	{
@@ -95,4 +93,4 @@ protected:
 
 };
 
-#endif // !_CELL_TASK_H_
+#endif // !_CELL_TASK_HPP_

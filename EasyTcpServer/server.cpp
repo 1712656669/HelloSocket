@@ -6,25 +6,10 @@
 #include "Alloctor.hpp"
 #include <thread>
 
-bool g_bRun = true;
-void cmdThread()
-{
-    while (true)
-    {
-        char cmdBuf[256] = {};
-        scanf("%s", cmdBuf);
-        if (0 == strcmp(cmdBuf, "exit"))
-        {
-            g_bRun = false;
-            printf("退出cmdThread线程\n");
-            break;
-        }
-        else
-        {
-            printf("命令不支持，请重新输入。\n");
-        }
-    }
-}
+//void cmdThread()
+//{
+//    
+//}
 
 class MyServer :public EasyTcpServer
 {
@@ -42,7 +27,7 @@ public:
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeaderPtr& header)
+    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeader* header)
     {
         EasyTcpServer::OnNetMsg(pCELLServer, pClient, header);
         switch (header->cmd)
@@ -54,9 +39,14 @@ public:
                 //printf("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", pClient->sockfd(), Login->dataLength, Login->userName, Login->PassWord);
                 //忽略判断用户密码是否正确的过程
                 LoginResult ret;
-                pClient->SendData(&ret);
+                if (SOCKET_ERROR == pClient->SendData(&ret))
+                {
+                    //消息发送区满了，消息没发出去
+                    printf("<socket=%d> Send Full\n", (int)(pClient->sockfd()));
+                }
                 //auto ret = std::make_shared<LoginResult>();
-                //pCELLServer->addSendTask(pClient, (DataHeaderPtr)ret);
+                //LoginResult* ret = new LoginResult();
+                //pCELLServer->addSendTask(pClient, ret);
             }
             break;
             case CMD_LOGOUT:
@@ -98,15 +88,26 @@ int main()
     server.Start(4);
 
     //启动UI线程
-    std::thread t1(cmdThread);
-    t1.detach();
+    /*std::thread t1(cmdThread);
+    t1.detach();*/
 
+    bool g_bRun = true;
     while (g_bRun)
     {
-        server.OnRun();
-        //printf("空闲时间处理其他业务...\n");
+        char cmdBuf[256] = {};
+        scanf("%s", cmdBuf);
+        if (0 == strcmp(cmdBuf, "exit"))
+        {
+            server.Close();
+            printf("退出cmdThread线程\n");
+            break;
+        }
+        else
+        {
+            printf("命令不支持，请重新输入。\n");
+        }
     }
-    server.Close();
+    
     printf("服务器已退出\n");
 
     /*

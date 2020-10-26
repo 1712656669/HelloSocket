@@ -1,5 +1,5 @@
-﻿#ifndef _MessageHeader_hpp_
-#define _MessageHeader_hpp_
+﻿#ifndef _MESSAGE_HEADER_HPP_
+#define _MESSAGE_HEADER_HPP_
 
 enum CMD
 {
@@ -33,11 +33,11 @@ struct Login :public DataHeader
         cmd = CMD_LOGIN;
         memset(userName, 0, sizeof(userName));
         memset(PassWord, 0, sizeof(PassWord));
-        memset(data, 0, sizeof(data));
+        //memset(data, 0, sizeof(data));
     }
     char userName[32];
     char PassWord[32];
-    char data[32];
+    //char data[32];
 };
 
 struct LoginResult :public DataHeader
@@ -47,10 +47,10 @@ struct LoginResult :public DataHeader
         dataLength = sizeof(LoginResult);
         cmd = CMD_LOGIN_RESULT;
         result = 0;
-        memset(data, 0, sizeof(data));
+        //memset(data, 0, sizeof(data));
     }
     int result;
-    char data[92];
+    //char data[92];
 };
 
 struct Logout :public DataHeader
@@ -104,4 +104,4 @@ struct S2C_Heart :public DataHeader
     }
 };
 
-#endif //_MessageHeader_hpp_
+#endif // !_MESSAGE_HEADER_HPP_

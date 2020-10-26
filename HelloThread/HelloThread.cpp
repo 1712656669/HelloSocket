@@ -8,7 +8,7 @@ using namespace std;
 
 mutex m;
 const int tCount = 4;
-atomic_int sum = 0;
+atomic_int sum;
 void workFun(int index)
 {
 	for (int n = 0; n < 200000; n++)

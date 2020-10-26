@@ -9,17 +9,15 @@ class CELLThread
 private:
 	typedef std::function<void(CELLThread*)> EventCall;
 public:
-	void Start(EventCall onCreat = nullptr,
+	void Start(EventCall onCreate = nullptr,
 		EventCall onRun = nullptr,
-		EventCall onClose = nullptr)
+		EventCall onDestroy = nullptr)
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
 		if (!_isRun)
 		{
 			_isRun = true;
-			//线程
-			//std::mem_fn(&CELLThread::OnWork)
-			std::thread t(&CELLThread::OnWork, this);
-			t.detach();
+			
 			if (onCreate)
 			{
 				_onCreate = onCreate;
@@ -28,16 +26,43 @@ public:
 			{
 				_onRun = onRun;
 			}
-			if (onClose)
+			if (onDestroy)
 			{
-				_onClose = onClose;
+				_onDestroy = onDestroy;
 			}
+
+			//线程
+			//std::mem_fn(&CELLThread::OnWork)
+			std::thread t(&CELLThread::OnWork, this);
+			t.detach();
 		}
 	}
 
 	void Close()
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		if (_isRun)
+		{
+			_isRun = false;
+			_sem.wait();
+		}
+	}
 
+	//在工作函数中退出
+	//不需要使用信号量来阻塞等待
+	//如果使用会阻塞
+	void Exit()
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		if (_isRun)
+		{
+			_isRun = false;
+		}
+	}
+
+	bool isRun()
+	{
+		return _isRun;
 	}
 
 private:
@@ -51,16 +76,19 @@ private:
 		{
 			_onRun(this);
 		}
-		if (_onClose)
+		if (_onDestroy)
 		{
-			_onClose(this);
+			_onDestroy(this);
 		}
+		_sem.wakeup();
 	}
 
 private:
 	EventCall _onCreate;
 	EventCall _onRun;
-	EventCall _onClose;
+	EventCall _onDestroy;
+	//不同线程中改变数据时需要加锁
+	std::mutex _mutex;
 	//控制线程的终止、退出
 	CELLSemaphore _sem;
 	//线程是否启动运行

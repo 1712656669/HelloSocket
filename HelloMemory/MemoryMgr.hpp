@@ -1,5 +1,5 @@
-﻿#ifndef _MemoryMgr_hpp_
-#define _MemoryMgr_hpp_
+﻿#ifndef _MEMORY_MGR_HPP_
+#define _MEMORY_MGR_HPP_
 
 #include <stdlib.h>
 #include <assert.h>
@@ -280,4 +280,4 @@ private:
 	MemoryAlloc* _szAlloc[MAX_MEMORY_SIZE + 1];
 };
 
-#endif // _MemoryMgr_hpp_
+#endif // !_MEMORY_MGR_HPP_

@@ -28,7 +28,7 @@ void cmdThread()
 }
 
 //客户端数量
-const int cCount = 20; //最大连接数 - 服务端个数 FD_SETSIZE - 1
+const int cCount = 100; //最大连接数 - 服务端个数 FD_SETSIZE - 1
 //发送线程数量
 const int tCount = 4;
 EasyTcpClient* client[cCount];
@@ -93,7 +93,6 @@ void sendThread(int id)
             {
                 sendCount++;
             }
-            //client[n]->OnRun();
         }
         /*std::chrono::milliseconds t(100);
         std::this_thread::sleep_for(t);*/

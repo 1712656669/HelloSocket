@@ -1,5 +1,5 @@
-﻿#ifndef _EasyTcpServer_hpp_
-#define _EasyTcpServer_hpp_
+﻿#ifndef _EASY_TCP_SERVER_HPP_
+#define _EASY_TCP_SERVER_HPP_
 
 #include "CELL.hpp"
 #include "CELLClient.hpp"
@@ -14,11 +14,12 @@
 class EasyTcpServer :public INetEvent
 {
 private:
-    SOCKET _sock;
+    CELLThread _thread;
     //消息处理对象，内部会创建线程
     std::vector<CELLServerPtr> _cellServers;
     //每秒消息计时
     CELLTimestamp _tTime;
+    SOCKET _sock;
 protected:
     //SOCKET recv计数
     std::atomic_int _recvCount;
@@ -50,7 +51,17 @@ public:
         WSADATA dat;
         WSAStartup(ver, &dat);
 #endif
-        if (isRun())
+//
+#ifndef _WIN32
+        //if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+        //{
+        //    return (1);
+        //}
+        //忽略异常信号，默认情况会导致进程终止
+        signal(SIGPIPE, SIG_IGN);
+#endif
+
+        if (INVALID_SOCKET != _sock)
         {
             printf("<socket=%d>关闭旧连接...\n", (int)_sock);
             Close();
@@ -135,59 +146,16 @@ public:
             //启动消息处理线程
             ser->Start();
         }
-    }
-
-    //处理网络消息
-    bool OnRun()
-    {
-        if (isRun())
-        {
-            time4msg();
-            //伯克利套接字 BSD socket
-            fd_set fdRead; //select监视的可读文件句柄集合
-            //fd_set fdWrite; //select监视的可写文件句柄集合
-            //fd_set fdExp; //select监视的异常文件句柄集合
-            //将fd_set清零使集合中不含任何SOCKET
-            FD_ZERO(&fdRead);
-            //FD_ZERO(&fdWrite);
-            //FD_ZERO(&fdExp);
-            //将SOCKET加入fd_set集合
-            FD_SET(_sock, &fdRead);
-            //FD_SET(_sock, &fdWrite);
-            //FD_SET(_sock, &fdExp);
-            //int nfds 集合中所有文件描述符的范围，而不是数量
-            //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
-            //timeout 本次select()的超时结束时间
-            timeval t = { 0, 10 }; //s,ms
-            int ret = select((int)_sock + 1, &fdRead, 0, 0, &t);
-            if (ret < 0)
-            {
-                //printf("Accept Select任务结束。\n");
-                Close();
-                return false;
-            }
-            //判断描述符(socket)是否在集合中
-            if (FD_ISSET(_sock, &fdRead))
-            {
-                FD_CLR(_sock, &fdRead);
-                Accept();
-            }
-            return true;
-        }
-        return false;
-    }
-
-    //计算并输出每秒收到的网络消息
-    void time4msg()
-    {
-        auto t1 = _tTime.getElapseSecond();
-        if (t1 >= 1.0)
-        {
-            printf("thread<%zd>, time<%f>, socket<%d>, clients<%d>, recvCount<%d>, msgCount<%d>\n", _cellServers.size(), t1, (int)_sock, (int)_clientCount, (int)(_recvCount / t1), (int)(_msgCount / t1));
-            _recvCount = 0;
-            _msgCount = 0;
-            _tTime.update();
-        }
+        _thread.Start(
+            //onCreat
+            nullptr,
+            //onRun
+            [this](CELLThread* pThread) {
+                OnRun(pThread);
+            },
+            //onClose
+            nullptr
+            );
     }
 
     //接受客户端连接
@@ -235,7 +203,8 @@ public:
     void Close()
     {
         printf("EasyTcpServer.Close begin\n");
-        if (isRun())
+        _thread.Close();
+        if (INVALID_SOCKET != _sock)
         {
             _cellServers.clear();
             //关闭套接字
@@ -249,12 +218,6 @@ public:
             _sock = INVALID_SOCKET;
         }
         printf("EasyTcpServer.Close end\n");
-    }
-
-    //是否工作中
-    bool isRun()
-    {
-        return INVALID_SOCKET != _sock;
     }
 
     //只会被一个线程调用
@@ -272,7 +235,7 @@ public:
     }
 
     //cellServer 多线程调用 不安全
-    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeaderPtr& header)
+    virtual void OnNetMsg(CELLServer* pCELLServer, CELLClientPtr& pClient, DataHeader* header)
     {
         _msgCount++;
     }
@@ -282,6 +245,58 @@ public:
         _recvCount++;
     }
 
+private:
+    //处理网络消息
+    void OnRun(CELLThread* pThread)
+    {
+        while (pThread->isRun())
+        {
+            time4msg();
+            //伯克利套接字 BSD socket
+            fd_set fdRead; //select监视的可读文件句柄集合
+            //fd_set fdWrite; //select监视的可写文件句柄集合
+            //fd_set fdExp; //select监视的异常文件句柄集合
+            //将fd_set清零使集合中不含任何SOCKET
+            FD_ZERO(&fdRead);
+            //FD_ZERO(&fdWrite);
+            //FD_ZERO(&fdExp);
+            //将SOCKET加入fd_set集合
+            FD_SET(_sock, &fdRead);
+            //FD_SET(_sock, &fdWrite);
+            //FD_SET(_sock, &fdExp);
+            //int nfds 集合中所有文件描述符的范围，而不是数量
+            //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
+            //timeout 本次select()的超时结束时间
+            timeval t = { 0, 10 }; //s,us
+            int ret = select((int)_sock + 1, &fdRead, 0, 0, &t);
+            if (ret < 0)
+            {
+                printf("EasyTcpServer.OnRun Accept select exit.\n");
+                pThread->Exit();
+                break;
+            }
+            //判断描述符(socket)是否在集合中
+            if (FD_ISSET(_sock, &fdRead))
+            {
+                FD_CLR(_sock, &fdRead);
+                Accept();
+            }
+        }
+    }
+
+    //计算并输出每秒收到的网络消息
+    void time4msg()
+    {
+        auto t1 = _tTime.getElapseSecond();
+        if (t1 >= 1.0)
+        {
+            printf("thread<%zd>, time<%f>, socket<%d>, clients<%d>, recvCount<%d>, msgCount<%d>\n", _cellServers.size(), t1, (int)_sock, (int)_clientCount, (int)(_recvCount / t1), (int)(_msgCount / t1));
+            _recvCount = 0;
+            _msgCount = 0;
+            _tTime.update();
+        }
+    }
+
 };
 
-#endif //_EasyTcpServer_hpp_
+#endif // !_EASY_TCP_SERVER_HPP_
