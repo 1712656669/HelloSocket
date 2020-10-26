@@ -192,7 +192,7 @@ public:
         {
             if (FD_ISSET(iter.second->sockfd(), &fdWrite))
             {
-                if (-1 == iter->second->SendDataReal()) //与服务器断开连接
+                if (-1 == iter.second->SendDataReal()) //与服务器断开连接
                 {
                     if (_pNetEvent)
                     {
@@ -206,7 +206,6 @@ public:
         for (auto pClient : temp)
         {
             _clients.erase(pClient->sockfd());
-            delete pClient;
         }
 #endif //_WIN32
     }
@@ -255,7 +254,6 @@ public:
         for (auto pClient : temp)
         {
             _clients.erase(pClient->sockfd());
-            delete pClient;
         }
 #endif //_WIN32
     }

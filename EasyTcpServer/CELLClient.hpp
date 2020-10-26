@@ -38,7 +38,7 @@ public:
 #ifdef _WIN32
             closesocket(_sockfd);
 #else
-            closes(_sockfd);
+            close(_sockfd);
 #endif // !_WIN32
             _sockfd = INVALID_SOCKET;
         }
@@ -130,7 +130,7 @@ public:
         _dtHeart += dt;
         if (_dtHeart >= CLIENT_HEART_DEAD_TIME)
         {
-            printf("checkHeart dead:s=%d, time=%lld\n", (int)_sockfd, _dtHeart);
+            printf("checkHeart dead:s=%d, time=%d\n", (int)_sockfd, (int)_dtHeart);
             return true;
         }
         return false;
