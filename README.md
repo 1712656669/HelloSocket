@@ -7,6 +7,7 @@ VS2019更改调试属性
 服务器：  
 g++ server.cpp -std=c++11 -pthread -o server  
 ./server  
+  
 客户端：  
 g++ client.cpp -std=c++11 -pthread -o client  
 ./client  
