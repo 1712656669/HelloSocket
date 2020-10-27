@@ -4,44 +4,32 @@
 #include <thread>
 #include <mutex>
 #include <list>
+#include "CELLThread.hpp"
 
-//任务基类型
-class CELLTask
-{
-public:
-	CELLTask()
-	{
-
-	}
-
-	virtual ~CELLTask()
-	{
-	
-	}
-
-	//执行任务
-	virtual void doTask()
-	{
-
-	}
-};
-
-typedef std::shared_ptr<CELLTask> CELLTaskPtr;
+#include <functional>
 
 //执行任务的服务类型
 class CELLTaskServer
 {
+public:
+	//所属server id
+	int serverId = -1;
+private:
+	typedef std::function<void()> CELLTask;
 private:
 	//任务数据
-	std::list<CELLTaskPtr> _tasks;
+	std::list<CELLTask> _tasks;
 	//任务数据缓冲区
-	std::list<CELLTaskPtr> _tasksBuf;
+	std::list<CELLTask> _tasksBuf;
 	//改变数据缓冲区时需要加锁
 	std::mutex _mutex;
+	//
+	CELLThread _thread;
 
 public:
+
 	//添加任务
-	void addTask(CELLTaskPtr task)
+	void addTask(CELLTask task)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
 		//_mutex.lock();
@@ -52,17 +40,23 @@ public:
 	//启动工作线程
 	void Start()
 	{
-		//线程
-		//std::mem_fn(&CELLTaskServer::OnRun)
-		std::thread t(&CELLTaskServer::OnRun, this);
-		t.detach();
+		_thread.Start(nullptr, [this](CELLThread* pThread) {
+			OnRun(pThread);
+		}, nullptr);
+	}
+
+	void Close()
+	{
+		//CELLLog::Info("CELLTaskServer%d.Close begin\n", serverId);
+		_thread.Close();
+		//CELLLog::Info("CELLTaskServer%d.Close end\n", serverId);
 	}
 
 protected:
 	//工作函数
-	void OnRun()
+	void OnRun(CELLThread* pThread)
 	{
-		while (true)
+		while (_thread.isRun())
 		{
 			//从缓冲区取出数据
 			if (!_tasksBuf.empty())
@@ -84,11 +78,17 @@ protected:
 			//处理任务
 			for (auto pTask : _tasks)
 			{
-				pTask->doTask();
+				pTask();
 			}
 			//清空任务
 			_tasks.clear();
 		}
+		//处理缓冲队列中的任务
+		for (auto pTask : _tasksBuf)
+		{
+			pTask();
+		}
+		//CELLLog::Info("CELLTaskServer%d.OnRun exit\n", serverId);
 	}
 
 };

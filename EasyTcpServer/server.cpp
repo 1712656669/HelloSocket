@@ -1,8 +1,4 @@
-﻿// linux环境编译命令
-// g++ server.cpp -std=c++11 -pthread -o server
-// ./server
-
-#include "EasyTcpServer.hpp"
+﻿#include "EasyTcpServer.hpp"
 #include "Alloctor.hpp"
 #include <thread>
 
@@ -36,13 +32,13 @@ public:
             {
                 pClient->resetDTHeart(); //心跳时间重置
                 //Login* Login = (Login*)header;
-                //printf("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", pClient->sockfd(), Login->dataLength, Login->userName, Login->PassWord);
+                //CELLLog::Info("收到客户端<Socket=%d>请求：CMD_LOGIN  数据长度：%d  用户名：%s  用户密码：%s\n", pClient->sockfd(), Login->dataLength, Login->userName, Login->PassWord);
                 //忽略判断用户密码是否正确的过程
                 LoginResult ret;
                 if (SOCKET_ERROR == pClient->SendData(&ret))
                 {
                     //消息发送区满了，消息没发出去
-                    printf("<socket=%d> Send Full\n", (int)(pClient->sockfd()));
+                    CELLLog::Info("<socket=%d> Send Full\n", (int)(pClient->sockfd()));
                 }
                 //auto ret = std::make_shared<LoginResult>();
                 //LoginResult* ret = new LoginResult();
@@ -52,7 +48,7 @@ public:
             case CMD_LOGOUT:
             {
                 //Logout* logout = (Logout*)header;
-                //printf("收到客户端<Socket=%d>请求：CMD_LOGOUT  数据长度：%d  用户名：%s\n", pClient->sockfd(), logout->dataLength, logout->userName);
+                //CELLLog::Info("收到客户端<Socket=%d>请求：CMD_LOGOUT  数据长度：%d  用户名：%s\n", pClient->sockfd(), logout->dataLength, logout->userName);
                 //忽略判断用户密码是否正确的过程
                 //LogoutResult ret;
                 //pClient->SendData(&ret);
@@ -66,7 +62,7 @@ public:
             }
             default:
             {
-                printf("<socket=%d>收到未定义消息  数据长度：%d\n", (int)(pClient->sockfd()), header->dataLength);
+                CELLLog::Info("<socket=%d>收到未定义消息  数据长度：%d\n", (int)(pClient->sockfd()), header->dataLength);
                 //DataHeader ret;
                 //pClient->SendData(&ret);
             }
@@ -81,6 +77,7 @@ public:
 
 int main()
 {
+    CELLLog::Instance().setLogPath("serverLog.txt", "w");
     MyServer server;
     server.InitSocket();
     server.Bind(nullptr, 4567);
@@ -99,30 +96,14 @@ int main()
         if (0 == strcmp(cmdBuf, "exit"))
         {
             server.Close();
-            printf("退出cmdThread线程\n");
             break;
         }
         else
         {
-            printf("命令不支持，请重新输入。\n");
+            CELLLog::Info("命令不支持，请重新输入。\n");
         }
     }
     
-    printf("服务器已退出\n");
-
-    /*
-    CELLTaskServer task;
-    task.Start();
-    Sleep(100);
-    task.Close();
-    */
-
-    /*while (true)
-    {
-        Sleep(100);
-    }*/
-    getchar();
-    getchar();
-
+    CELLLog::Info("服务器已退出\n");
     return 0;
 }

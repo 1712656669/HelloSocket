@@ -1,11 +1,46 @@
-﻿// linux环境编译命令
-// g++ client.cpp -std=c++11 -pthread -o client
-// ./client
-
-#include "EasyTcpClient.hpp"
+﻿#include "EasyTcpClient.hpp"
 #include "CELLTimestamp.hpp"
 #include <thread>
 #include <atomic>
+
+class MyClient :public EasyTcpClient
+{
+public:
+    //响应网络消息
+    void OnNetMsg(DataHeader* header)
+    {
+        switch (header->cmd)
+        {
+        case CMD_LOGIN_RESULT:
+        {
+            //LoginResult* Login = (LoginResult*)header;
+            //CELLLog::Info("<socket=%d>收到服务器消息请求：CMD_LOGIN_RESULT  数据长度：%d\n", (int)_sock, Login->dataLength);
+        }
+        break;
+        case CMD_LOGOUT_RESULT:
+        {
+            //LogoutResult* logout = (LogoutResult*)header;
+            //CELLLog::Info("<socket=%d>收到服务器消息请求：CMD_LOGOUT_RESULT  数据长度：%d\n", (int)_sock, logout->dataLength);
+        }
+        break;
+        case CMD_NEW_USER_JOIN:
+        {
+            //NewUserJoin* userJoin = (NewUserJoin*)header;
+            //CELLLog::Info("<socket=%d>收到服务器消息请求：CMD_NEW_USER_JOIN  数据长度：%d\n", (int)_sock, userJoin->dataLength);
+        }
+        break;
+        case CMD_ERROR:
+        {
+            CELLLog::Info("<socket=%d>收到服务器消息请求：CMD_ERROR  数据长度：%d\n", (int)(_pClient->sockfd()), header->dataLength);
+        }
+        break;
+        default:
+        {
+            CELLLog::Info("<socket=%d>收到未定义消息  数据长度：%d\n", (int)(_pClient->sockfd()), header->dataLength);
+        }
+        }
+    }
+};
 
 bool g_bRun = true;
 void cmdThread()
@@ -17,12 +52,12 @@ void cmdThread()
         if (0 == strcmp(cmdBuf, "exit"))
         {
             g_bRun = false;
-            printf("退出cmdThread线程\n");
+            CELLLog::Info("退出cmdThread线程\n");
             break;
         }
         else
         {
-            printf("命令不支持，请重新输入。\n");
+            CELLLog::Info("命令不支持，请重新输入。\n");
         }
     }
 }
@@ -43,13 +78,13 @@ void recvThread(int begin, int end)
         {
             client[n]->OnRun();
         }
-        //printf("空闲时间处理其他业务...\n");
+        //CELLLog::Info("空闲时间处理其他业务...\n");
     }
 }
 
 void sendThread(int id)
 {
-    printf("thread<%d>, start\n", id);
+    CELLLog::Info("thread<%d>, start\n", id);
     //4个线程 ID 1-4
     int c = cCount / tCount;
     int begin = (id - 1) * c;
@@ -57,7 +92,7 @@ void sendThread(int id)
 
     for (int n = begin; n < end; n++)
     {
-        client[n] = new EasyTcpClient();
+        client[n] = new MyClient();
     }
     for (int n = begin; n < end; n++)
     {
@@ -65,7 +100,7 @@ void sendThread(int id)
         client[n]->Connect("192.168.128.1", 4567);
     }
     
-    printf("thread<%d>, Connect=<begin=%d, end=%d>\n", id, begin, end - 1);
+    CELLLog::Info("thread<%d>, Connect=<begin=%d, end=%d>\n", id, begin, end - 1);
 
     readyCount++;
     while(readyCount < tCount)
@@ -78,8 +113,8 @@ void sendThread(int id)
     std::thread t1(recvThread, begin, end);
     t1.detach();
 
-    Login login[10];
-    for (int n = 0; n < 10; n++)
+    Login login[1];
+    for (int n = 0; n < 1; n++)
     {
         strcpy(login[n].userName, "tao");
         strcpy(login[n].PassWord, "mm");
@@ -94,9 +129,9 @@ void sendThread(int id)
                 sendCount++;
             }
         }
-        /*std::chrono::milliseconds t(100);
-        std::this_thread::sleep_for(t);*/
-        //printf("空闲时间处理其他业务...\n");
+        std::chrono::milliseconds t(1);
+        std::this_thread::sleep_for(t);
+        //CELLLog::Info("空闲时间处理其他业务...\n");
     }
 
     for (int n = begin; n < end; n++)
@@ -105,11 +140,12 @@ void sendThread(int id)
         delete client[n];
     }
 
-    printf("thread<%d>, exit\n", id);
+    CELLLog::Info("thread<%d>, exit\n", id);
 }
 
 int main()
 {
+    CELLLog::Instance().setLogPath("clientLog.txt", "w");
     //启动UI线程
     std::thread t1(cmdThread);
     t1.detach();
@@ -128,14 +164,12 @@ int main()
         auto t = tTime.getElapseSecond();
         if (t >= 1.0)
         {
-            printf("thread<%d>, clients<%d>, time<%lf>, send<%d>\n", tCount, cCount, t, (int)(sendCount / t));
+            CELLLog::Info("thread<%d>, clients<%d>, time<%lf>, send<%d>\n", tCount, cCount, t, (int)(sendCount / t));
             sendCount = 0;
             tTime.update();
         }
     }
 
-    printf("客户端已退出\n");
-    getchar();
-    getchar();
+    CELLLog::Info("客户端已退出\n");
     return 0;
 }

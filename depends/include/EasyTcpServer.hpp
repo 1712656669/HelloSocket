@@ -5,6 +5,7 @@
 #include "CELLClient.hpp"
 #include "CELLServer.hpp"
 #include "INetEvent.hpp"
+#include "CELLNetWork.hpp"
 
 #include <thread>
 #include <mutex>
@@ -20,6 +21,8 @@ private:
     //每秒消息计时
     CELLTimestamp _tTime;
     SOCKET _sock;
+    //伯克利套接字 BSD socket
+    fd_set* fdRead; //select监视的可读文件句柄集合
 protected:
     //SOCKET recv计数
     std::atomic_int _recvCount;
@@ -35,45 +38,32 @@ public:
         _recvCount = 0;
         _msgCount = 0;
         _clientCount = 0;
+        fdRead = new fd_set;
     }
 
     virtual ~EasyTcpServer()
     {
         Close();
+        delete fdRead;
     }
 
     //初始化Socket
     SOCKET InitSocket()
     {
-#ifdef _WIN32
-        //启动Windows socket 2.x环境
-        WORD ver = MAKEWORD(2, 2);
-        WSADATA dat;
-        WSAStartup(ver, &dat);
-#endif
-//
-#ifndef _WIN32
-        //if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-        //{
-        //    return (1);
-        //}
-        //忽略异常信号，默认情况会导致进程终止
-        signal(SIGPIPE, SIG_IGN);
-#endif
-
+        CELLNetWork::Init();
         if (INVALID_SOCKET != _sock)
         {
-            printf("<socket=%d>关闭旧连接...\n", (int)_sock);
+            CELLLog::Info("<socket=%d>关闭旧连接...\n", (int)_sock);
             Close();
         }
         _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (INVALID_SOCKET == _sock)
         {
-            printf("<socket=%d>错误，建立Socket失败...\n", (int)_sock);
+            CELLLog::Info("<socket=%d>错误，建立Socket失败...\n", (int)_sock);
         }
         else
         {
-            printf("建立<socket=%d>成功...\n", (int)_sock);
+            CELLLog::Info("建立<socket=%d>成功...\n", (int)_sock);
         }
         return _sock;
     }
@@ -111,11 +101,11 @@ public:
         int ret = bind(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
         if (SOCKET_ERROR == ret)
         {
-            printf("错误，绑定网络端口<%d>失败...\n", port);
+            CELLLog::Info("错误，绑定网络端口<%d>失败...\n", port);
         }
         else
         {
-            printf("绑定网络端口<%d>成功...\n", port);
+            CELLLog::Info("绑定网络端口<%d>成功...\n", port);
         }
         return ret;
     }
@@ -126,11 +116,11 @@ public:
         int ret = listen(_sock, n);
         if (SOCKET_ERROR == ret)
         {
-            printf("<socket=%d>错误，监听网络端口失败\n", (int)_sock);
+            CELLLog::Info("<socket=%d>错误，监听网络端口失败\n", (int)_sock);
         }
         else
         {
-            printf("<socket=%d>监听网络端口成功...\n", (int)_sock);
+            CELLLog::Info("<socket=%d>监听网络端口成功...\n", (int)_sock);
         }
         return ret;
     }
@@ -171,7 +161,7 @@ public:
 #endif
         if (INVALID_SOCKET == cSock)
         {
-            printf("<socket=%d>错误，接受到无效客户端SOCKET...\n", (int)_sock);
+            CELLLog::Info("<socket=%d>错误，接受到无效客户端SOCKET...\n", (int)_sock);
         }
         else
         {
@@ -202,7 +192,7 @@ public:
     //关闭Socket
     void Close()
     {
-        printf("EasyTcpServer.Close begin\n");
+        CELLLog::Info("EasyTcpServer.Close begin\n");
         _thread.Close();
         if (INVALID_SOCKET != _sock)
         {
@@ -210,28 +200,26 @@ public:
             //关闭套接字
 #ifdef _WIN32
             closesocket(_sock);
-            //清除Windows socket环境
-            WSACleanup();
 #else
             close(_sock);
 #endif
             _sock = INVALID_SOCKET;
         }
-        printf("EasyTcpServer.Close end\n");
+        CELLLog::Info("EasyTcpServer.Close end\n");
     }
 
     //只会被一个线程调用
     virtual void OnNetJoin(CELLClientPtr& pClient)
     {
         _clientCount++;
-        //printf("client<%d> join\n", pClient->sockfd());
+        //CELLLog::Info("client<%d> join\n", pClient->sockfd());
     }
 
     //cellServer 多线程调用 不安全
     virtual void OnNetLeave(CELLClientPtr& pClient)
     {
         _clientCount--;
-        //printf("client<%d> leave\n", pClient->sockfd());
+        //CELLLog::Info("client<%d> leave\n", pClient->sockfd());
     }
 
     //cellServer 多线程调用 不安全
@@ -252,33 +240,24 @@ private:
         while (pThread->isRun())
         {
             time4msg();
-            //伯克利套接字 BSD socket
-            fd_set fdRead; //select监视的可读文件句柄集合
-            //fd_set fdWrite; //select监视的可写文件句柄集合
-            //fd_set fdExp; //select监视的异常文件句柄集合
-            //将fd_set清零使集合中不含任何SOCKET
-            FD_ZERO(&fdRead);
-            //FD_ZERO(&fdWrite);
-            //FD_ZERO(&fdExp);
+            FD_ZERO(fdRead);
             //将SOCKET加入fd_set集合
-            FD_SET(_sock, &fdRead);
-            //FD_SET(_sock, &fdWrite);
-            //FD_SET(_sock, &fdExp);
+            FD_SET(_sock, fdRead);
             //int nfds 集合中所有文件描述符的范围，而不是数量
             //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
             //timeout 本次select()的超时结束时间
             timeval t = { 0, 10 }; //s,us
-            int ret = select((int)_sock + 1, &fdRead, 0, 0, &t);
+            int ret = select((int)_sock + 1, fdRead, 0, 0, &t);
             if (ret < 0)
             {
-                printf("EasyTcpServer.OnRun Accept select exit.\n");
+                CELLLog::Info("EasyTcpServer.OnRun Accept select exit.\n");
                 pThread->Exit();
                 break;
             }
             //判断描述符(socket)是否在集合中
-            if (FD_ISSET(_sock, &fdRead))
+            if (FD_ISSET(_sock, fdRead))
             {
-                FD_CLR(_sock, &fdRead);
+                FD_CLR(_sock, fdRead);
                 Accept();
             }
         }
@@ -290,7 +269,7 @@ private:
         auto t1 = _tTime.getElapseSecond();
         if (t1 >= 1.0)
         {
-            printf("thread<%zd>, time<%f>, socket<%d>, clients<%d>, recvCount<%d>, msgCount<%d>\n", _cellServers.size(), t1, (int)_sock, (int)_clientCount, (int)(_recvCount / t1), (int)(_msgCount / t1));
+            CELLLog::Info("thread<%zd>, time<%f>, socket<%d>, clients<%d>, recvCount<%d>, msgCount<%d>\n", _cellServers.size(), t1, (int)_sock, (int)_clientCount, (int)(_recvCount / t1), (int)(_msgCount / t1));
             _recvCount = 0;
             _msgCount = 0;
             _tTime.update();

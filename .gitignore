@@ -1,4 +1,6 @@
-.vs
-Debug
-Win32
-x64
+/.vs
+/Debug
+/Win32
+/x64
+/EasyTcpServer/serverLog.txt
+/EasyTcpClient/clientLog.txt
