@@ -84,9 +84,9 @@ private:
 	}
 
 private:
-	EventCall _onCreate;
-	EventCall _onRun;
-	EventCall _onDestroy;
+	EventCall _onCreate = nullptr;
+	EventCall _onRun = nullptr;
+	EventCall _onDestroy = nullptr;
 	//不同线程中改变数据时需要加锁
 	std::mutex _mutex;
 	//控制线程的终止、退出

@@ -5,16 +5,16 @@
 #include <assert.h>
 #include <mutex>
 
-#ifdef _DEBUG
-	#ifndef xPrintf
-		#include <stdio.h>
-		#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
-	#endif
-#else
-	#ifndef xPrintf
-		#define xPrintf(...)  //被替换为空
-	#endif
-#endif
+//#ifdef _DEBUG
+//	#ifndef xPrintf
+//		#include <stdio.h>
+//		#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
+//	#endif
+//#else
+//	#ifndef xPrintf
+//		#define xPrintf(...)  //被替换为空
+//	#endif
+//#endif
 
 #define MAX_MEMORY_SIZE 1024
 
@@ -49,7 +49,7 @@ class MemoryAlloc
 public:
 	MemoryAlloc()
 	{
-		//xPrintf("MemoryAlloc\n");
+		//CELLLog::Info("MemoryAlloc\n");
 		_pBuf = nullptr;
 		_pHeader = nullptr;
 		_nSize = 0;
@@ -68,7 +68,7 @@ public:
 	//初始化
 	void InitMemory()
 	{
-		//xPrintf("InitMemory: nSize=%d, nBlocks=%d\n", _nSize, _nBlocks);
+		//CELLLog::Info("InitMemory: nSize=%d, nBlocks=%d\n", _nSize, _nBlocks);
 		//断言
 		assert(nullptr == _pBuf);
 		if (_pBuf)
@@ -131,7 +131,7 @@ public:
 			assert(0 == pReturn->nRef);
 			pReturn->nRef = 1;
 		}
-		//xPrintf("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
+		//CELLLog::Info("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
 		return (char*)pReturn + sizeof(MemoryBlock);
 	}
 
@@ -195,12 +195,12 @@ class MemoryMgr
 private:
 	MemoryMgr()
 	{
-		//xPrintf("MemoryMgr\n");
+		//CELLLog::Info("MemoryMgr\n");
 		init_szAlloc(0, 64, &_mem64);
 		init_szAlloc(65, 128, &_mem128);
-		//init_szAlloc(129, 256, &_mem256);
-		//init_szAlloc(257, 512, &_mem512);
-		//init_szAlloc(513, 1024, &_mem1024);
+		init_szAlloc(129, 256, &_mem256);
+		init_szAlloc(257, 512, &_mem512);
+		init_szAlloc(513, 1024, &_mem1024);
 	}
 
 	~MemoryMgr()
@@ -231,7 +231,7 @@ public:
 			pReturn->nID = -1;
 			pReturn->nRef = 1;
 			pReturn->bPool = false;
-			//xPrintf("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
+			//CELLLog::Info("allocMem: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
 			return (char*)pReturn + sizeof(MemoryBlock);
 		}
 	}
@@ -240,7 +240,7 @@ public:
 	void freeMem(void* pMem)
 	{
 		MemoryBlock* pBlock = (MemoryBlock*)((char*)pMem - sizeof(MemoryBlock));
-		//xPrintf("freeMem:  %p, id=%d\n", pBlock, pBlock->nID);
+		//CELLLog::Info("freeMem:  %p, id=%d\n", pBlock, pBlock->nID);
 		if (pBlock->bPool)
 		{
 			pBlock->pAlloc->freeMemory(pMem);

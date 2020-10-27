@@ -27,9 +27,9 @@ public:
 
     ~CELLServer()
     {
-        printf("CELLServer%d.~CELLServer exit begin\n", _id);
+        CELLLog::Info("CELLServer%d.~CELLServer exit begin\n", _id);
         Close();
-        printf("CELLServer%d.~CELLServer exit end\n", _id);
+        CELLLog::Info("CELLServer%d.~CELLServer exit end\n", _id);
     }
 
     void setEventObj(INetEvent* event)
@@ -57,7 +57,7 @@ public:
     //处理网络消息
     void OnRun(CELLThread* pThread)
     {
-        printf("CELLServer%d.OnRun begin\n", _id);
+        CELLLog::Info("CELLServer%d.OnRun begin\n", _id);
         while (pThread->isRun())
         {
             //从缓冲区队列里取出客户数据
@@ -125,7 +125,7 @@ public:
             int ret = select((int)_maxSock + 1, &fdRead, &fdWrite, nullptr, &t);
             if (ret < 0)
             {
-                printf("CELLServer%d.OnRun.select Error exit\n", _id);
+                CELLLog::Info("CELLServer%d.OnRun.select Error exit\n", _id);
                 pThread->Exit();
                 break;
             }
@@ -134,7 +134,7 @@ public:
             //WriteData(fdExp);
             CheckTime();
         }
-        printf("CELLServer%d.OnRun exit\n", _id);
+        CELLLog::Info("CELLServer%d.OnRun exit\n", _id);
     }
 
     void CheckTime()
@@ -232,7 +232,7 @@ public:
             }
             else
             {
-                printf("error. if (iter != _clients.end())\n");
+                CELLLog::Info("error. if (iter != _clients.end())\n");
             }
         }
 #else
@@ -264,40 +264,22 @@ public:
     int RecvData(CELLClientPtr pClient)
     {
         //接收客户端数据
-        char* szRecv = pClient->msgBuf() + pClient->getLastPos();
-        int nlen = (int)recv(pClient->sockfd(), szRecv, RECV_BUFF_SIZE - pClient->getLastPos(), 0);
-        _pNetEvent->OnNetRecv(pClient);
-        //printf("nlen=%d\n", nlen);
+        int nlen = pClient->RecvData();
         if (nlen <= 0)
         {
-            //printf("客户端<Socket=%d>已退出，任务结束。\n", pClient->sockfd());
+            //CELLLog::Info("客户端<Socket=%d>已退出，任务结束。\n", pClient->sockfd());
             return -1;
         }
-        //将收取收取到的数据拷贝到消息缓冲区
-        //memcpy(pClient->msgBuf() + pClient->getLastPos(), _szRecv, nlen);
-        //消息缓冲区的数据尾部位置后移
-        pClient->setLastPos(pClient->getLastPos() + nlen);
-        //判断消息缓冲区的数据长度大于消息头DataHeader长度
-        while (pClient->getLastPos() >= sizeof(DataHeader))
+        //触发<接收到网络数据>事件
+        _pNetEvent->OnNetRecv(pClient);
+
+        //循环 判断数据是否有消息需要处理
+        while (pClient->hasMsg())
         {
-            //这时就可以知道当前消息的长度
-            DataHeader* header = (DataHeader*)pClient->msgBuf();
-            //判断消息缓冲区的数据长度大于消息长度
-            if (pClient->getLastPos() >= header->dataLength)
-            {
-                //剩余未处理消息缓冲区消息的长度
-                int nSize = pClient->getLastPos() - header->dataLength;
-                //处理网络消息
-                OnNetMsg(pClient, header);
-                //将消息缓冲区剩余未处理数据前移
-                memcpy(pClient->msgBuf(), pClient->msgBuf() + header->dataLength, nSize);
-                pClient->setLastPos(nSize);
-            }
-            else
-            {
-                //消息缓冲区剩余数据不够一条完整消息
-                break;
-            }
+            //处理网络消息
+            OnNetMsg(pClient, pClient->front_msg());
+            //移除消息队列（缓冲区）最前的一条数据
+            pClient->pop_front_msg();
         }
         return 0;
     }
@@ -311,10 +293,10 @@ public:
     //关闭Socket
     void Close()
     {
-        printf("CELLServer%d.Close begin\n", _id);
+        CELLLog::Info("CELLServer%d.Close begin\n", _id);
         _taskServer.Close();
         _thread.Close();
-        printf("CELLServer%d.Close end\n", _id);
+        CELLLog::Info("CELLServer%d.Close end\n", _id);
     }
 
     void addClient(CELLClientPtr pClient)

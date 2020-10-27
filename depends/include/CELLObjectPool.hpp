@@ -5,16 +5,16 @@
 #include <assert.h>
 #include <mutex>
 
-#ifdef _DEBUG
-	#ifndef xPrintf
-		#include <stdio.h>
-		#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
-	#endif
-#else
-	#ifndef xPrintf
-		#define xPrintf(...)  //被替换为空
-	#endif
-#endif
+//#ifdef _DEBUG
+//	#ifndef xPrintf
+//		#include <stdio.h>
+//		#define xPrintf(...) printf(__VA_ARGS__) //宏替代函数，可变参
+//	#endif
+//#else
+//	#ifndef xPrintf
+//		#define xPrintf(...)  //被替换为空
+//	#endif
+//#endif
 
 template<class Type, size_t nPools>
 class CELLObjectPool
@@ -108,7 +108,7 @@ public:
 			assert(0 == pReturn->nRef);
 			pReturn->nRef = 1;
 		}
-		//xPrintf("allocObjMemory: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
+		//CELLLog::Info("allocObjMemory: %p, id=%d, size=%zd\n", pReturn, pReturn->nID, nSize);
 		return (char*)pReturn + sizeof(NodeHeader);
 	}
 
@@ -116,7 +116,7 @@ public:
 	void freeObjMemory(void* pMem)
 	{
 		NodeHeader* pBlock = (NodeHeader*)((char*)pMem - sizeof(NodeHeader));
-		//xPrintf("freeObjMemory: %p, id=%d\n", pBlock, pBlock->nID);
+		//CELLLog::Info("freeObjMemory: %p, id=%d\n", pBlock, pBlock->nID);
 		assert(1 == pBlock->nRef);
 		if (pBlock->bPool)
 		{

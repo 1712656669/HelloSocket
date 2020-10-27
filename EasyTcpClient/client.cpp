@@ -1,11 +1,46 @@
-﻿// linux环境编译命令
-// g++ client.cpp -std=c++11 -pthread -o client
-// ./client
-
-#include "EasyTcpClient.hpp"
+﻿#include "EasyTcpClient.hpp"
 #include "CELLTimestamp.hpp"
 #include <thread>
 #include <atomic>
+
+class MyClient :public EasyTcpClient
+{
+public:
+    //响应网络消息
+    void OnNetMsg(DataHeader* header)
+    {
+        switch (header->cmd)
+        {
+        case CMD_LOGIN_RESULT:
+        {
+            //LoginResult* Login = (LoginResult*)header;
+            //printf("<socket=%d>收到服务器消息请求：CMD_LOGIN_RESULT  数据长度：%d\n", (int)_sock, Login->dataLength);
+        }
+        break;
+        case CMD_LOGOUT_RESULT:
+        {
+            //LogoutResult* logout = (LogoutResult*)header;
+            //printf("<socket=%d>收到服务器消息请求：CMD_LOGOUT_RESULT  数据长度：%d\n", (int)_sock, logout->dataLength);
+        }
+        break;
+        case CMD_NEW_USER_JOIN:
+        {
+            //NewUserJoin* userJoin = (NewUserJoin*)header;
+            //printf("<socket=%d>收到服务器消息请求：CMD_NEW_USER_JOIN  数据长度：%d\n", (int)_sock, userJoin->dataLength);
+        }
+        break;
+        case CMD_ERROR:
+        {
+            printf("<socket=%d>收到服务器消息请求：CMD_ERROR  数据长度：%d\n", (int)(_pClient->sockfd()), header->dataLength);
+        }
+        break;
+        default:
+        {
+            printf("<socket=%d>收到未定义消息  数据长度：%d\n", (int)(_pClient->sockfd()), header->dataLength);
+        }
+        }
+    }
+};
 
 bool g_bRun = true;
 void cmdThread()
@@ -57,7 +92,7 @@ void sendThread(int id)
 
     for (int n = begin; n < end; n++)
     {
-        client[n] = new EasyTcpClient();
+        client[n] = new MyClient();
     }
     for (int n = begin; n < end; n++)
     {
@@ -94,8 +129,8 @@ void sendThread(int id)
                 sendCount++;
             }
         }
-        /*std::chrono::milliseconds t(100);
-        std::this_thread::sleep_for(t);*/
+        //std::chrono::milliseconds t(999);
+        //std::this_thread::sleep_for(t);
         //printf("空闲时间处理其他业务...\n");
     }
 

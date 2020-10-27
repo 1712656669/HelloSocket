@@ -47,9 +47,9 @@ public:
 
 	void Close()
 	{
-		printf("CELLTaskServer%d.Close begin\n", serverId);
+		//CELLLog::Info("CELLTaskServer%d.Close begin\n", serverId);
 		_thread.Close();
-		printf("CELLTaskServer%d.Close end\n", serverId);
+		//CELLLog::Info("CELLTaskServer%d.Close end\n", serverId);
 	}
 
 protected:
@@ -83,7 +83,12 @@ protected:
 			//清空任务
 			_tasks.clear();
 		}
-		printf("CELLTaskServer%d.OnRun exit\n", serverId);
+		//处理缓冲队列中的任务
+		for (auto pTask : _tasksBuf)
+		{
+			pTask();
+		}
+		//CELLLog::Info("CELLTaskServer%d.OnRun exit\n", serverId);
 	}
 
 };

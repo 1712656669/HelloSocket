@@ -34,7 +34,7 @@ public:
 		}
 		else
 		{
-			printf("CELLSemaphore wakeup erroe.");
+			//CELLLog::Info("CELLSemaphore wakeup erroe.");
 		}
 	}
 
