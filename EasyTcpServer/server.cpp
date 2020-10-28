@@ -1,5 +1,6 @@
 ﻿#include "EasyTcpServer.hpp"
 #include "Alloctor.hpp"
+#include "CELLMsgStream.hpp"
 #include <thread>
 
 //void cmdThread()
@@ -46,12 +47,38 @@ public:
             }
             break;
             case CMD_LOGOUT:
-            {
-                //Logout* logout = (Logout*)header;
-                //CELLLog::Info("收到客户端<Socket=%d>请求：CMD_LOGOUT  数据长度：%d  用户名：%s\n", pClient->sockfd(), logout->dataLength, logout->userName);
-                //忽略判断用户密码是否正确的过程
-                //LogoutResult ret;
-                //pClient->SendData(&ret);
+            {;
+                CELLRecvStream r(header);
+                auto n1 = r.ReadInt8();
+                auto n2 = r.ReadInt16();
+                auto n3 = r.ReadInt32();
+                auto n4 = r.ReadFloat();
+                auto n5 = r.ReadDouble();
+
+                uint32_t n = 0;
+                r.onlyRead(n);
+                char username[32] = {};
+                auto n6 = r.ReadArray(username, 32);
+                char password[32] = {};
+                auto n7 = r.ReadArray(password, 32);
+                int ndata[10] = {};
+                auto n8 = r.ReadArray(ndata, 10);
+
+                CELLSendStream s;
+                s.setNetCmd(CMD_LOGOUT_RESULT);
+                s.WriteInt8(1);
+                s.WriteInt16(2);
+                s.WriteInt32(3);
+                s.WriteFloat(4.5f);
+                s.WriteDouble(6.7);
+                const char* str = "server";
+                s.WriteArray(str, strlen(str));
+                char a[] = "world";
+                s.WriteArray(a, strlen(a));
+                int b[] = { 1,2,3,4,5 };
+                s.WriteArray(b, 5);
+                s.finish();
+                pClient->SendData(s.data(), s.length());
             }
             break;
             case CMD_C2S_HEART:

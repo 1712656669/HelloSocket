@@ -91,9 +91,14 @@ public:
     //发送数据
     int SendData(DataHeader* header)
     {
-        if (_sendBuff.push((const char*)header, header->dataLength))
+        return SendData((const char*)header, header->dataLength);
+    }
+
+    int SendData(const char* pData, int len)
+    {
+        if (_sendBuff.push((const char*)pData, len))
         {
-            return header->dataLength;
+            return len;
         }
         return SOCKET_ERROR;
     }
