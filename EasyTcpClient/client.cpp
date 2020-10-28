@@ -97,7 +97,7 @@ void sendThread(int id)
     for (int n = begin; n < end; n++)
     {
         client[n]->InitSocket();
-        client[n]->Connect("192.168.128.1", 4567);
+        client[n]->Connect("127.0.0.1", 4567);
     }
     
     CELLLog::Info("thread<%d>, Connect=<begin=%d, end=%d>\n", id, begin, end - 1);

@@ -72,9 +72,9 @@ public:
                 s.WriteFloat(4.5f);
                 s.WriteDouble(6.7);
                 const char* str = "server";
-                s.WriteArray(str, strlen(str));
+                s.WriteArray(str, (uint32_t)strlen(str));
                 char a[] = "world";
-                s.WriteArray(a, strlen(a));
+                s.WriteArray(a, (uint32_t)strlen(a));
                 int b[] = { 1,2,3,4,5 };
                 s.WriteArray(b, 5);
                 s.finish();

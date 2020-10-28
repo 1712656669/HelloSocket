@@ -56,12 +56,12 @@ public:
 
 	bool WriteString(const char* str)
 	{
-		return WriteArray(str, strlen(str));
+		return WriteArray(str, (uint32_t)strlen(str));
 	}
 
 	bool WriteString(std::string& str)
 	{
-		return WriteArray(str.c_str(), str.length());
+		return WriteArray(str.c_str(), (uint32_t)str.length());
 	}
 
 	void finish()

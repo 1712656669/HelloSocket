@@ -54,7 +54,7 @@ int main()
     s.WriteDouble(6.7);
     s.WriteString("client");
     char a[] = "world";
-    s.WriteArray(a, strlen(a));
+    s.WriteArray(a, (uint32_t)strlen(a));
     int b[] = { 1,2,3,4,5 };
     s.WriteArray(b, 5);
     s.finish();

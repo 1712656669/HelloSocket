@@ -16,10 +16,10 @@ public:
     CELLServer(int id)
     {
         _pNetEvent = nullptr;
-        FD_ZERO(&_fdRead_bak);
+        _fdRead_bak = new fd_set;
+        FD_ZERO(_fdRead_bak);
         _clients_change = true;
         _maxSock = SOCKET_ERROR;
-        _fdRead_bak = new fd_set;
         //memset(_szRecv, 0, sizeof(_szRecv));
         _oldTime = CELLTime::getNowInMilliSec();
         _id = id;
@@ -191,7 +191,7 @@ public:
         std::vector<CELLClientPtr> temp;
         for (auto iter : _clients)
         {
-            if (FD_ISSET(iter.second->sockfd(), &fdWrite))
+            if (FD_ISSET(iter.second->sockfd(), fdWrite))
             {
                 if (-1 == iter.second->SendDataReal()) //与服务器断开连接
                 {
@@ -239,7 +239,7 @@ public:
         std::vector<CELLClientPtr> temp;
         for (auto iter : _clients)
         {
-            if (FD_ISSET(iter.second->sockfd(), &fdRead))
+            if (FD_ISSET(iter.second->sockfd(), fdRead))
             {
                 if (-1 == RecvData(iter.second)) //与服务器断开连接
                 {
