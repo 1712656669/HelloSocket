@@ -4,7 +4,7 @@ EasyTcpServer是服务器项目，EasyTcpClient是客户端项目。
 ByteStream是测试使用字节流的客户端项目。  
 其他项目是基础知识学习和测试的项目。  
 
-## Windows VS2019环境编译注意事项
+## Windows平台 Visual Studio 环境编译注意事项
 更改调试属性  
 项目属性 -> 常规属性  
 输出目录：$(SolutionDir)../bin/$(Platform)/$(Configuration)\  
