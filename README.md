@@ -10,7 +10,7 @@ ByteStream是测试使用字节流的客户端项目。
 输出目录：$(SolutionDir)../bin/$(Platform)/$(Configuration)\  
 中间目录：$(SolutionDir)../temp/$(Platform)/$(Configuration)/$(ProjectName)\  
   
-添加通用代码库  
+EasyTcpServer, EasyTcpClient, ByteStream三个项目添加通用代码库  
 项目属性 -> C/C++ -> 常规  
 附加包含目录：..\depends\include
   
