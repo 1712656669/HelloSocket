@@ -16,8 +16,10 @@ public:
     CELLServer(int id)
     {
         _pNetEvent = nullptr;
-        _fdRead_bak = new fd_set;
-        FD_ZERO(_fdRead_bak);
+        _fdRead = new fd_set;
+        _fdWrite = new fd_set;
+        __fdRead_bak = new fd_set;
+        FD_ZERO(__fdRead_bak);
         _clients_change = true;
         _maxSock = SOCKET_ERROR;
         //memset(_szRecv, 0, sizeof(_szRecv));
@@ -86,52 +88,47 @@ public:
                 _oldTime = CELLTime::getNowInMilliSec();
                 continue;
             }
-
-            //伯克利套接字 BSD socket
-            fd_set* fdRead = new fd_set; //select监视的可读文件句柄集合
-            fd_set* fdWrite = new fd_set; //select监视的可写文件句柄集合
-            //fd_set fdExp; //select监视的异常文件句柄集合
             
             if (_clients_change)
             {
                 _clients_change = false;
                 //将fd_set清零使集合中不含任何SOCKET
-                FD_ZERO(fdRead);
-                //FD_ZERO(fdWrite);
+                FD_ZERO(_fdRead);
+                FD_ZERO(_fdWrite);
                 //FD_ZERO(fdExp);
                 //将SOCKET加入fd_set集合
                 _maxSock = _clients.begin()->first;
                 for (auto client : _clients)
                 {
-                    FD_SET(client.first, fdRead);
+                    FD_SET(client.first, _fdRead);
                     if (_maxSock < client.first)
                     {
                         _maxSock = client.first;
                     }
                 }
-                memcpy(_fdRead_bak, fdRead, sizeof(fd_set));
+                memcpy(__fdRead_bak, _fdRead, sizeof(fd_set));
             }
             else
             {
-                memcpy(fdRead, _fdRead_bak, sizeof(fd_set));
+                memcpy(_fdRead, __fdRead_bak, sizeof(fd_set));
             }
 
-            memcpy(fdWrite, _fdRead_bak, sizeof(fd_set));
-            //memcpy(fdExp, _fdRead_bak, sizeof(fd_set));
+            memcpy(_fdWrite, __fdRead_bak, sizeof(fd_set));
+            //memcpy(fdExp, __fdRead_bak, sizeof(fd_set));
 
             //int nfds 集合中所有文件描述符的范围，而不是数量
             //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
             //timeout 本次select()的超时结束时间
             timeval t = { 0,1 }; //s,us
-            int ret = select((int)_maxSock + 1, fdRead, fdWrite, nullptr, &t);
+            int ret = select((int)_maxSock + 1, _fdRead, _fdWrite, nullptr, &t);
             if (ret < 0)
             {
                 CELLLog::Info("CELLServer%d.OnRun.select Error exit\n", _id);
                 pThread->Exit();
                 break;
             }
-            ReadData(fdRead);
-            WriteData(fdWrite);
+            ReadData(_fdRead);
+            WriteData(_fdWrite);
             //WriteData(fdExp);
             CheckTime();
         }
@@ -167,12 +164,12 @@ public:
         }
     }
 
-    void WriteData(fd_set* fdWrite)
+    void WriteData(fd_set* _fdWrite)
     {
 #ifdef _WIN32
-        for (int n = 0; n < (int)fdWrite->fd_count; n++)
+        for (int n = 0; n < (int)_fdWrite->fd_count; n++)
         {
-            auto iter = _clients.find(fdWrite->fd_array[n]);
+            auto iter = _clients.find(_fdWrite->fd_array[n]);
             if (iter != _clients.end())
             {
                 if (-1 == iter->second->SendDataReal()) //与服务器断开连接
@@ -191,7 +188,7 @@ public:
         std::vector<CELLClientPtr> temp;
         for (auto iter : _clients)
         {
-            if (FD_ISSET(iter.second->sockfd(), fdWrite))
+            if (FD_ISSET(iter.second->sockfd(), _fdWrite))
             {
                 if (-1 == iter.second->SendDataReal()) //与服务器断开连接
                 {
@@ -211,12 +208,12 @@ public:
 #endif //_WIN32
     }
 
-    void ReadData(fd_set* fdRead)
+    void ReadData(fd_set* _fdRead)
     {
 #ifdef _WIN32
-        for (int n = 0; n < (int)fdRead->fd_count; n++)
+        for (int n = 0; n < (int)_fdRead->fd_count; n++)
         {
-            auto iter = _clients.find(fdRead->fd_array[n]);
+            auto iter = _clients.find(_fdRead->fd_array[n]);
             if (iter != _clients.end())
             {
                 if (-1 == RecvData(iter->second)) //与服务器断开连接
@@ -239,7 +236,7 @@ public:
         std::vector<CELLClientPtr> temp;
         for (auto iter : _clients)
         {
-            if (FD_ISSET(iter.second->sockfd(), fdRead))
+            if (FD_ISSET(iter.second->sockfd(), _fdRead))
             {
                 if (-1 == RecvData(iter.second)) //与服务器断开连接
                 {
@@ -342,7 +339,7 @@ private:
     //缓冲队列的锁
     std::mutex _mutex;
     //备份客户socket fd_set
-    fd_set* _fdRead_bak;
+    fd_set* __fdRead_bak;
     CELLThread _thread;
     //
     int _id = -1;
@@ -351,6 +348,9 @@ private:
     SOCKET _maxSock;
     //旧的时间戳
     time_t _oldTime;
+    //伯克利套接字 BSD socket
+    fd_set* _fdRead; //select监视的可读文件句柄集合
+    fd_set* _fdWrite; //select监视的可写文件句柄集合
 };
 
 #endif // !_CELL_SERVER_HPP_

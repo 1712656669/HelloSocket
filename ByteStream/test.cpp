@@ -45,7 +45,7 @@ public:
 
 int main()
 {
-    CELLSendStream s;
+    CELLSendStream s(128);
     s.setNetCmd(CMD_LOGOUT);
     s.WriteInt8(1);
     s.WriteInt16(2);

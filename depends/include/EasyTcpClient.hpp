@@ -13,15 +13,15 @@ public:
     {
         _pClient = nullptr;
         _isConnect = false;
-        fdRead = new fd_set;
-        fdWrite = new fd_set;
+        _fdRead = new fd_set;
+        _fdWrite = new fd_set;
     }
 
     virtual ~EasyTcpClient()
     {
         Close();
-        delete fdRead;
-        delete fdWrite;
+        delete _fdRead;
+        delete _fdWrite;
     }
 
     //初始化Socket
@@ -99,20 +99,20 @@ public:
         if (isRun())
         {
             SOCKET sock = _pClient->sockfd();
-            FD_ZERO(fdRead);
-            FD_SET(sock, fdRead);
-            FD_ZERO(fdWrite);
+            FD_ZERO(_fdRead);
+            FD_SET(sock, _fdRead);
+            FD_ZERO(_fdWrite);
 
             timeval t = { 0,10 }; //s,us
             int ret = 0;
             if (_pClient->needwrite())
             {
-                FD_SET(sock, fdWrite);
-                ret = select((int)sock + 1, fdRead, fdWrite, nullptr, &t);
+                FD_SET(sock, _fdWrite);
+                ret = select((int)sock + 1, _fdRead, _fdWrite, nullptr, &t);
             }
             else
             {
-                ret = select((int)sock + 1, fdRead, nullptr, nullptr, &t);
+                ret = select((int)sock + 1, _fdRead, nullptr, nullptr, &t);
             }
             
             if (ret < 0) //select错误
@@ -121,7 +121,7 @@ public:
                 Close();
                 return false;
             }
-            if (FD_ISSET(sock, fdRead))
+            if (FD_ISSET(sock, _fdRead))
             {
                 if (-1 == RecvData(sock)) //与服务器断开连接
                 {
@@ -130,7 +130,7 @@ public:
                     return false;
                 }
             }
-            if (FD_ISSET(sock, fdWrite))
+            if (FD_ISSET(sock, _fdWrite))
             {
                 if (-1 == _pClient->SendDataReal()) //与服务器断开连接
                 {
@@ -191,8 +191,8 @@ protected:
     CELLClient* _pClient;
     bool _isConnect;
 private:
-    fd_set* fdRead;
-    fd_set* fdWrite;
+    fd_set* _fdRead;
+    fd_set* _fdWrite;
 };
 
 #endif // !_EASY_TCP_CLIENT_HPP_

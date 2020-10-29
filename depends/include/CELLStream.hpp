@@ -2,6 +2,7 @@
 #define _CELL_STREAM_HPP_
 
 #include <cstdint>
+#include "CELLLog.hpp"
 
 class CELLStream
 {
@@ -94,6 +95,7 @@ public:
 			}
 			return true;
 		}
+		CELLLog::Info("error,CELLStream::Read failed.\n");
 		return false;
 	}
 
@@ -126,6 +128,7 @@ public:
 				return len1;
 			}
 		}
+		CELLLog::Info("error,CELLStream::ReadArray failed.\n");
 		return 0;
 	}
 
@@ -176,6 +179,7 @@ public:
 			push(nLen);
 			return true;
 		}
+		CELLLog::Info("error,CELLStream::Write failed.\n");
 		return false;
 	}
 
@@ -195,6 +199,7 @@ public:
 			push(nLen);
 			return true;
 		}
+		CELLLog::Info("error,CELLStream::WriteArray failed.\n");
 		return false;
 	}
 
