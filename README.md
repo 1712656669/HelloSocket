@@ -27,10 +27,12 @@ g++ client.cpp -std=c++11 -pthread -o client
 以Windows环境为例  
 ### 服务器  
 ![image](images/serverStart.png)  
+  
 在命令行输入exit退出服务器  
 ![image](images/serverClose.png)  
 ### 客户端  
 ![image](images/clientStart1.png)  
 ![image](images/clientStart2.png)  
+  
 在命令行输入exit退出客户端  
 ![image](images/clientClose.png)  
