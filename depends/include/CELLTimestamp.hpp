@@ -47,6 +47,7 @@ public:
 	//获取微妙
 	long long getElapseTimeInMicroSec()
 	{
+		//函数duration_cast()提供了在不同的时间单位之间进行转换的功能
 		return duration_cast<microseconds>(high_resolution_clock::now() - _begin).count();
 	}
 

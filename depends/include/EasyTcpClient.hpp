@@ -164,7 +164,7 @@ public:
             }
             return nLen;
         }
-        return 0;
+        return -1;
     }
 
     //响应网络消息

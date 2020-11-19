@@ -16,6 +16,10 @@ public:
 		if (--_wait < 0)
 		{
 			//阻塞等待
+			//在线程被阻塞时，该函数会自动调用 lck.unlock() 释放锁，使得其他被阻塞在锁竞争上的线程得以继续执行
+			//一旦当前线程获得通知(notified，通常是另外某个线程调用 notify_* 唤醒了当前线程)
+			//wait() 函数也是自动调用 lck.lock()，使得 lck 的状态和 wait 函数被调用时相同。
+			//带条件的被阻塞:只有当条件为false时调用该wait函数才会阻塞当前线程，并且在收到其它线程的通知后只有当条件为true时才会被解除阻塞
 			_cv.wait(lock, [this]()->bool {
 				return _wakeup > 0;
 			});
@@ -34,7 +38,7 @@ public:
 		}
 		else
 		{
-			//CELLLog::Info("CELLSemaphore wakeup erroe.");
+			//CELLLog::Info("CELLSemaphore wakeup error.");
 		}
 	}
 

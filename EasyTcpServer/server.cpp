@@ -132,5 +132,7 @@ int main()
     }
     
     CELLLog::Info("服务器已退出\n");
+    getchar();
+    getchar();
     return 0;
 }

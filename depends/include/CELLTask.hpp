@@ -40,9 +40,11 @@ public:
 	//启动工作线程
 	void Start()
 	{
-		_thread.Start(nullptr, [this](CELLThread* pThread) {
-			OnRun(pThread);
-		}, nullptr);
+		_thread.Start(nullptr, 
+					  [this](CELLThread* pThread) {
+							OnRun(pThread);
+					  }, 
+					  nullptr);
 	}
 
 	void Close()

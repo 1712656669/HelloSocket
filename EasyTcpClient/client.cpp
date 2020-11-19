@@ -67,6 +67,7 @@ const int cCount = 100; //最大连接数 - 服务端个数 FD_SETSIZE - 1
 //发送线程数量
 const int tCount = 4;
 EasyTcpClient* client[cCount];
+//原子操作计数类型
 std::atomic_int sendCount;
 std::atomic_int readyCount;
 
@@ -129,8 +130,8 @@ void sendThread(int id)
                 sendCount++;
             }
         }
-        std::chrono::milliseconds t(1);
-        std::this_thread::sleep_for(t);
+        //std::chrono::milliseconds t(1);
+        //std::this_thread::sleep_for(t);
         //CELLLog::Info("空闲时间处理其他业务...\n");
     }
 
@@ -171,5 +172,7 @@ int main()
     }
 
     CELLLog::Info("客户端已退出\n");
+    getchar();
+    getchar();
     return 0;
 }

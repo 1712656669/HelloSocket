@@ -17,8 +17,8 @@ private:
 	typedef std::function<void(CELLThread*)> EventCall;
 public:
 	void Start(EventCall onCreate = nullptr,
-		EventCall onRun = nullptr,
-		EventCall onDestroy = nullptr)
+			   EventCall onRun = nullptr,
+			   EventCall onDestroy = nullptr)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
 		if (!_isRun)
@@ -40,6 +40,8 @@ public:
 
 			//线程
 			//std::mem_fn(&CELLThread::OnWork)
+			//函数模板std :: mem_fn生成指向成员的指针的包装对象，该对象可以存储，复制和调用指向成员的指针
+			//调用std :: mem_fn时，可以使用对象的引用和指针（包括智能指针）
 			std::thread t(&CELLThread::OnWork, this);
 			t.detach();
 		}

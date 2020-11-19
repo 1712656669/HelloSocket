@@ -9,10 +9,17 @@ private:
 	CELLNetWork()
 	{
 #ifdef _WIN32
+        //创建WORD的版本号 和 WSADATA变量
+        //高位字节指出副版本(修正)号，低位字节指明主版本号
+        WORD version = MAKEWORD(2, 2);
+        //操作系统用来返回请求的Socket的版本信息
+        WSADATA data;
         //启动Windows socket 2.x环境
-        WORD ver = MAKEWORD(2, 2);
-        WSADATA dat;
-        WSAStartup(ver, &dat);
+        WSAStartup(version, &data);
+        //WSA异步套接字
+        //同步：调用发送/接收函数，函数调用结束时，相应的发送/接收处理已经完成，数据已经被发送/接收到了
+        //异步：调用发送/接收函数，函数调用结束时，表示数据已经送达底层去处理了，但是是否处理结束并不知道
+        //      代码可以继续做其他操作，稍候相应的操作结束时，处理结果会通过事件（或者回调）来告诉调用者
 #endif
         //
 #ifndef _WIN32

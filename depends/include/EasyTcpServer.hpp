@@ -56,6 +56,11 @@ public:
             CELLLog::Info("<socket=%d>关闭旧连接...\n", (int)_sock);
             Close();
         }
+        // 建立一个socket用于连接
+        //af: 地址族address family，如AF_INET(IPV4)
+        //type: 连接类型，通常是SOCK_STREAM或SOCK_DGRAM
+        //protocol: 协议类型，通常是IPPROTO_TCP或IPPROTO_UDP
+        //返回值：socket的编号，为-1表示失败
         _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (INVALID_SOCKET == _sock)
         {
@@ -72,9 +77,9 @@ public:
     int Bind(const char* ip, unsigned short port)
     {
         if (INVALID_SOCKET == _sock)
-         {
+        {
             InitSocket();
-         }
+        }
         sockaddr_in _sin = {};
         _sin.sin_family = AF_INET; //地址族(IPV4)
         _sin.sin_port = htons(port); //端口号，host to net unsigned short
@@ -113,6 +118,7 @@ public:
     //监听端口号
     int Listen(int n) //等待连接队列的最大长度
     {
+        //失败返回-1，成功返回0
         int ret = listen(_sock, n);
         if (SOCKET_ERROR == ret)
         {
@@ -145,7 +151,7 @@ public:
             },
             //onClose
             nullptr
-            );
+        );
     }
 
     //接受客户端连接
@@ -166,8 +172,10 @@ public:
         else
         {
             //将新客户端分配给客户数量最少的CELLServer
+            //使用对象池
             CELLClientPtr task(new CELLClient(cSock));
             addClientToCELLServer(task);
+            //不使用对象池，直接使用内存池
             //addClientToCELLServer(std::make_shared<CELLClient>(cSock));
             //获取IP地址 inet_ntoa(clientAddr.sin_addr)
         }
@@ -247,6 +255,12 @@ private:
             //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
             //timeout 本次select()的超时结束时间
             timeval t = { 0, 10 }; //s,us
+            //fdRead初始化为包含所有socket，通过select函数投放给系统，系统遍历数组后，只将可发送的socket再赋值回来
+            //调用后，这个参数只剩下可发送的socket
+            //返回值
+            //0：在等待时间没有客户端socket响应
+            //>0：有客户端socket响应
+            //SOCKET_ERROR(-1)：发送错误
             int ret = select((int)_sock + 1, fdRead, 0, 0, &t);
             if (ret < 0)
             {

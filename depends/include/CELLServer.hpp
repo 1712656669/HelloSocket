@@ -18,8 +18,8 @@ public:
         _pNetEvent = nullptr;
         _fdRead = new fd_set;
         _fdWrite = new fd_set;
-        __fdRead_bak = new fd_set;
-        FD_ZERO(__fdRead_bak);
+        _fdRead_bak = new fd_set;
+        FD_ZERO(_fdRead_bak);
         _clients_change = true;
         _maxSock = SOCKET_ERROR;
         //memset(_szRecv, 0, sizeof(_szRecv));
@@ -48,7 +48,7 @@ public:
             nullptr,
             //onRun
             [this](CELLThread* pThread) {
-            OnRun(pThread);
+                OnRun(pThread);
             }, 
             //onClose
             [this](CELLThread* pThread) {
@@ -96,25 +96,25 @@ public:
                 FD_ZERO(_fdRead);
                 FD_ZERO(_fdWrite);
                 //FD_ZERO(fdExp);
-                //将SOCKET加入fd_set集合
                 _maxSock = _clients.begin()->first;
                 for (auto client : _clients)
                 {
+                    //将SOCKET加入fd_set集合
                     FD_SET(client.first, _fdRead);
                     if (_maxSock < client.first)
                     {
                         _maxSock = client.first;
                     }
                 }
-                memcpy(__fdRead_bak, _fdRead, sizeof(fd_set));
+                memcpy(_fdRead_bak, _fdRead, sizeof(fd_set));
             }
             else
             {
-                memcpy(_fdRead, __fdRead_bak, sizeof(fd_set));
+                memcpy(_fdRead, _fdRead_bak, sizeof(fd_set));
             }
 
-            memcpy(_fdWrite, __fdRead_bak, sizeof(fd_set));
-            //memcpy(fdExp, __fdRead_bak, sizeof(fd_set));
+            memcpy(_fdWrite, _fdRead_bak, sizeof(fd_set));
+            //memcpy(fdExp, _fdRead_bak, sizeof(fd_set));
 
             //int nfds 集合中所有文件描述符的范围，而不是数量
             //即所有文件描述符的最大值加1，在windows中这个参数无所谓，可以写0
@@ -229,14 +229,14 @@ public:
             }
             else
             {
-                CELLLog::Info("error. if (iter != _clients.end())\n");
+                CELLLog::Info("error. iter == _clients.end()\n");
             }
         }
 #else
         std::vector<CELLClientPtr> temp;
         for (auto iter : _clients)
         {
-            if (FD_ISSET(iter.second->sockfd(), _fdRead))
+            if (FD_ISSET(iter.first, _fdRead))
             {
                 if (-1 == RecvData(iter.second)) //与服务器断开连接
                 {
@@ -339,7 +339,7 @@ private:
     //缓冲队列的锁
     std::mutex _mutex;
     //备份客户socket fd_set
-    fd_set* __fdRead_bak;
+    fd_set* _fdRead_bak;
     CELLThread _thread;
     //
     int _id = -1;

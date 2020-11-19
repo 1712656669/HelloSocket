@@ -11,7 +11,7 @@
 #define CLIENT_SEND_BUFF_TIME 200 //毫秒
 
 //客户端数据类型
-class CELLClient :public ObjectPoolBase<CELLClient, 4>
+class CELLClient :public ObjectPoolBase<CELLClient, 1000>
 {
 public:
     CELLClient(SOCKET sockfd = INVALID_SOCKET):
@@ -35,7 +35,7 @@ public:
 
     ~CELLClient()
     {
-        CELLLog::Info("s=%d CELLClient%d.~CELLClient\n", serverId, id);
+        //CELLLog::Info("s=%d CELLClient%d.~CELLClient\n", serverId, id);
         if(INVALID_SOCKET != _sockfd)
         {
 #ifdef _WIN32

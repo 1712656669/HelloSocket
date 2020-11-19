@@ -152,7 +152,7 @@ public:
 		}
 		else
 		{
-			if (--pBlock->nRef != 0)
+			if (--pBlock->nRef == 0)
 			{
 				free(pBlock);
 			}
